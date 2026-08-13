@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { CalendarDays, Sparkle } from "lucide-react";
 import { Atmosphere } from "@/components/atmosphere";
+import { AuthControl } from "@/components/auth-control";
 import { ThemeControl } from "@/components/theme-control";
 import { ViewTransitionLink } from "@/components/view-transition-link";
 import { DreamStoreProvider } from "@/lib/dreams-store";
@@ -31,6 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <CalendarDays className="h-4 w-4" />
                   <span className="hidden sm:inline">Calendario</span>
                 </ViewTransitionLink>
+                <AuthControl />
                 <ThemeControl />
               </div>
             </nav>

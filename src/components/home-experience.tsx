@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, LockKeyhole } from "lucide-react";
+import { ArrowRight, Cloud, LockKeyhole } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { AuthControl } from "@/components/auth-control";
 import { PageTransition } from "@/components/motion/page-transition";
 import { ViewTransitionLink } from "@/components/view-transition-link";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
@@ -26,6 +27,10 @@ export function HomeExperience() {
           <p className="flex items-center gap-2 text-sm leading-6 text-text-muted">
             <LockKeyhole className="h-4 w-4 shrink-0" /> Se guarda sólo en este navegador.
           </p>
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <AuthControl />
+          <p className="flex items-center gap-2 text-sm leading-6 text-text-muted"><Cloud className="h-4 w-4 shrink-0" /> Conecta una cuenta para preparar tu sincronización privada.</p>
         </div>
       </motion.div>
 
