@@ -1,13 +1,17 @@
 {
-  "name": "oneiric",
+  "name": "onirc",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint src tests next.config.ts playwright.config.ts vitest.config.mts tailwind.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "npm run build && playwright test",
+    "test:qa": "npm run lint && npm run typecheck && npm run test && npm run test:e2e",
+    "qa:lighthouse": "node scripts/run-lighthouse.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
@@ -21,7 +25,10 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/eslintrc": "^3.3.1",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
@@ -29,7 +36,9 @@
     "eslint": "^9.17.0",
     "eslint-config-next": "latest",
     "postcss": "^8.4.49",
+    "serve": "^14.2.6",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
   }
 }

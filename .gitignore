@@ -1,4 +1,7 @@
 .next/
+.next-lighthouse/
+.next-onirc/
+out/
 node_modules/
 tsconfig.tsbuildinfo
 next-dev.log
@@ -36,3 +39,7 @@ textbox-debug.json
 cua-signatures.json
 DESIGN-*.txt
 handoff.md
+artifacts/
+playwright-report/
+test-results/
+.lighthouseci/
