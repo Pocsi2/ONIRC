@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { Atmosphere } from "@/components/atmosphere";
 import { ViewTransitionLink } from "@/components/view-transition-link";
+import { DreamStoreProvider } from "@/lib/dreams-store";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 
@@ -20,8 +21,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navTransition = reducedMotion ? reducedTransition : transitions.standard;
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <Atmosphere />
+    <DreamStoreProvider>
+      <div className="relative min-h-screen overflow-hidden">
+        <Atmosphere />
       <header className="pointer-events-none fixed inset-x-0 top-0 z-navigation px-4 py-4 sm:px-6 lg:px-8">
         <nav className="pointer-events-auto mx-auto flex max-w-[1440px] items-center justify-between gap-4">
           <ViewTransitionLink
@@ -99,6 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
-    </div>
+      </div>
+    </DreamStoreProvider>
   );
 }

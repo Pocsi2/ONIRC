@@ -1,18 +1,24 @@
 "use client";
 
-import { ArrowLeft, CalendarDays, MapPin, Sparkles } from "lucide-react";
+import * as React from "react";
+import { ArrowLeft, CalendarDays, MapPin, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/motion/page-transition";
 import { Button } from "@/components/ui/button";
 import { DreamPearl } from "@/components/dream-pearl";
 import { ViewTransitionLink } from "@/components/view-transition-link";
 import type { Dream } from "@/lib/dreams";
 import { formatDreamDate } from "@/lib/dreams";
+import { useDreamStore } from "@/lib/dreams-store";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 import { dreamReveal, staggeredDreamReveal } from "@/lib/motion/variants";
 
 export function DreamDetail({ dream }: { dream: Dream }) {
   const reducedMotion = useReducedMotion();
+  const { removeDream } = useDreamStore();
+  const router = useRouter();
+  const [confirmingDelete, setConfirmingDelete] = React.useState(false);
 
   return (
     <PageTransition className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -55,6 +61,12 @@ export function DreamDetail({ dream }: { dream: Dream }) {
             </div>
           </dl>
         </div>
+        <Button asChild variant="ghost" className="mt-5 w-full justify-start">
+          <ViewTransitionLink href={`/dreams/${dream.id}/edit`}>
+            <Pencil className="h-4 w-4" />
+            Edit this memory
+          </ViewTransitionLink>
+        </Button>
       </motion.aside>
 
       <motion.div
@@ -131,10 +143,34 @@ export function DreamDetail({ dream }: { dream: Dream }) {
             className="mt-14 flex flex-col gap-3 border-t border-white/55 pt-8 sm:flex-row sm:items-center sm:justify-between"
           >
             <p className="text-sm text-text-muted">The calendar is still behind this memory.</p>
-            <Button asChild variant="secondary">
-              <ViewTransitionLink href="/new">Keep another</ViewTransitionLink>
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="secondary">
+                <ViewTransitionLink href="/new">Keep another</ViewTransitionLink>
+              </Button>
+              <Button variant="ghost" onClick={() => setConfirmingDelete(true)}>
+                <Trash2 className="h-4 w-4" />
+                Let it go
+              </Button>
+            </div>
           </motion.div>
+
+          {confirmingDelete ? (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-5 flex flex-col gap-3 rounded-[22px] border border-white/60 bg-white/55 p-4 text-sm text-text-secondary sm:flex-row sm:items-center sm:justify-between">
+              <span>Let this memory leave the calendar?</span>
+              <div className="flex gap-2">
+                <Button variant="ghost" onClick={() => setConfirmingDelete(false)}>Keep it</Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    removeDream(dream.id);
+                    router.push("/calendar");
+                  }}
+                >
+                  Let it go
+                </Button>
+              </div>
+            </motion.div>
+          ) : null}
         </div>
       </motion.div>
     </PageTransition>

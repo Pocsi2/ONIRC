@@ -1,10 +1,9 @@
-import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { DreamDetail } from "@/components/dream-detail";
-import { dreams, getDreamById, visualSavedDream } from "@/lib/dreams";
+import { DreamDetailRoute } from "@/components/dream-detail-route";
+import { dreams, getDreamById } from "@/lib/dreams";
 
 export function generateStaticParams() {
-  return [...dreams, visualSavedDream].map((dream) => ({ id: dream.id }));
+  return dreams.map((dream) => ({ id: dream.id }));
 }
 
 export default async function DreamDetailPage({
@@ -15,13 +14,9 @@ export default async function DreamDetailPage({
   const { id } = await params;
   const dream = getDreamById(id);
 
-  if (!dream) {
-    notFound();
-  }
-
   return (
     <AppShell>
-      <DreamDetail dream={dream} />
+      <DreamDetailRoute dreamId={id} initialDream={dream} />
     </AppShell>
   );
 }

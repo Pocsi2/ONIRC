@@ -10,7 +10,7 @@ export default async function CalendarPage({
 
   return (
     <AppShell>
-      <DreamCalendar revealKeptDream={params?.kept === "white-garden"} />
+      <DreamCalendar highlightDreamId={params?.kept} />
     </AppShell>
   );
 }
