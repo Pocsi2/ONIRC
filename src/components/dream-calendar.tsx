@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CloudCurtain } from "@/components/cloud-curtain";
+import { CloudSyncControl } from "@/components/cloud-sync-control";
 import { DreamCollection } from "@/components/dream-collection";
 import { DreamComposer } from "@/components/dream-composer";
 import { DreamFocus } from "@/components/dream-focus";
@@ -47,7 +48,7 @@ export function DreamCalendar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reducedMotion = useReducedMotion();
-  const { dreams, isReady, persistence, removeDream, restoreDream, resetDreams } = useDreamStore();
+  const { dreams, isReady, persistence, removeDream, restoreDream, resetDreams, cloud } = useDreamStore();
   const [highlightedId, setHighlightedId] = React.useState<string | null>(null);
   const [toast, setToast] = React.useState<Toast>(null);
   const [confirmReset, setConfirmReset] = React.useState(false);
@@ -150,8 +151,9 @@ export function DreamCalendar() {
               <div className="max-w-3xl">
                 <p className="text-xs font-medium uppercase tracking-[0.32em] text-text-muted">Mi calendario local</p>
                 <h1 className="mt-4 font-display text-balance text-[clamp(3.6rem,8vw,7.5rem)] leading-[.88] tracking-[-0.06em]">{monthLabel(currentMonth)}</h1>
-                <p className="mt-4 max-w-xl text-sm leading-6 text-text-secondary">Cada perla señala un sueño que existe sólo en este navegador.</p>
+                <p className="mt-4 max-w-xl text-sm leading-6 text-text-secondary">{cloud.status === "synced" ? "Cada perla señala un sueño guardado en este navegador y en tu copia privada." : "Cada perla señala un sueño que existe sólo en este navegador."}</p>
                 {persistence.message ? <p role="status" aria-live="polite" className={cn("mt-3 text-sm leading-6", persistence.kind === "warning" ? "text-memory-accessible" : "text-text-muted")}>{persistence.message}</p> : null}
+                <CloudSyncControl />
               </div>
               <div className="surface-frost flex w-fit items-center gap-1 rounded-[20px] p-1" aria-label="Navegar meses">
                 <button type="button" className="material-button grid h-11 w-11 place-items-center rounded-[14px]" aria-label="Mes anterior" onClick={() => moveMonth(-1)}><ChevronLeft className="h-4 w-4" /></button>
@@ -208,7 +210,7 @@ export function DreamCalendar() {
               ) : null}
             </section>
             <div className="mt-8 flex flex-col gap-4 border-t border-white/45 pt-6 text-sm text-text-muted sm:flex-row sm:items-center sm:justify-between [html[data-theme=night]_&]:border-white/10">
-              <p>Este espacio no sincroniza tus recuerdos ni los comparte.</p>
+              <p>{cloud.status === "synced" ? "Tu copia privada se sincroniza únicamente con tu cuenta." : "Este espacio no sincroniza tus recuerdos ni los comparte."}</p>
               {confirmReset ? (
                 <span className="flex flex-wrap items-center gap-2 text-text-secondary">
                   <span>¿Dejar el calendario local en blanco?</span>

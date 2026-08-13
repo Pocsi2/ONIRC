@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { hueForId, slugifyDream, type Dream, type DreamDraft, type SavedDraft } from "@/lib/dreams";
+import { deleteDreamFromCloud, saveDreamToCloud, subscribeToCloudDreams, synchronizeDreams } from "@/lib/cloud-dreams";
+import { useAuthSession } from "@/lib/auth-store";
 import { clearAllLocalDreams, clearDraft, loadDraft, loadDreams, saveDraft, saveDreams, type PersistenceStatus } from "@/lib/dreams-repository";
 import { normalizeDraft } from "@/lib/dreams-schema";
 
@@ -10,6 +12,11 @@ type LocalDreamState = {
   isReady: boolean;
   persistence: PersistenceStatus;
   savedDraft: SavedDraft | null;
+};
+
+export type CloudSyncState = {
+  status: "signed-out" | "ready" | "syncing" | "synced" | "error";
+  message?: string;
 };
 
 type DreamStoreValue = LocalDreamState & {
@@ -21,6 +28,8 @@ type DreamStoreValue = LocalDreamState & {
   getDream: (id: string) => Dream | undefined;
   saveLocalDraft: (draft: DreamDraft) => void;
   clearLocalDraft: () => void;
+  cloud: CloudSyncState;
+  synchronizeWithCloud: () => Promise<void>;
 };
 
 const emptyState: LocalDreamState = { dreams: [], isReady: false, persistence: { kind: "ready" }, savedDraft: null };
@@ -79,13 +88,65 @@ function makeDream(draft: DreamDraft, id: string, createdAt?: string): Dream {
 
 export function DreamStoreProvider({ children }: { children: React.ReactNode }) {
   const state = React.useSyncExternalStore(subscribe, getClientSnapshot, () => emptyState);
+  const { ready: authReady, user } = useAuthSession();
+  const [cloud, setCloud] = React.useState<CloudSyncState>({ status: "signed-out" });
+  const unsubscribeCloudRef = React.useRef<(() => void) | null>(null);
+
+  React.useEffect(() => {
+    unsubscribeCloudRef.current?.();
+    unsubscribeCloudRef.current = null;
+    if (!authReady) return;
+    const timer = window.setTimeout(() => {
+      setCloud(user
+        ? { status: "ready", message: "Tu cuenta está lista. Tus recuerdos aún permanecen sólo en este navegador." }
+        : { status: "signed-out" });
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      unsubscribeCloudRef.current?.();
+    };
+  }, [authReady, user]);
+
+  const beginCloudSubscription = React.useCallback((userId: string) => {
+    unsubscribeCloudRef.current?.();
+    unsubscribeCloudRef.current = subscribeToCloudDreams(
+      userId,
+      (cloudDreams) => {
+        const local = getClientSnapshot().dreams;
+        // After explicit activation, Firestore is the shared copy. Local storage
+        // remains a durable offline cache for this browser.
+        setState({ ...getClientSnapshot(), dreams: cloudDreams, persistence: saveDreams(cloudDreams), isReady: true });
+        if (local.length !== cloudDreams.length) setCloud({ status: "synced", message: "Tus recuerdos están sincronizados de forma privada." });
+      },
+      () => setCloud({ status: "error", message: "No se pudo actualizar la copia privada. Tus recuerdos locales siguen a salvo." }),
+    );
+  }, []);
+
+  const synchronizeWithCloud = React.useCallback(async () => {
+    if (!user) return;
+    setCloud({ status: "syncing", message: "Uniendo tus copias con cuidado…" });
+    try {
+      const result = await synchronizeDreams(user.uid, getClientSnapshot().dreams);
+      setState({ ...getClientSnapshot(), dreams: result.dreams, persistence: saveDreams(result.dreams), isReady: true });
+      beginCloudSubscription(user.uid);
+      setCloud({
+        status: "synced",
+        message: result.conflicts
+          ? `Tus recuerdos están sincronizados. Conservamos ${result.conflicts} copia${result.conflicts === 1 ? "" : "s"} para no perder versiones distintas.`
+          : "Tus recuerdos están sincronizados de forma privada.",
+      });
+    } catch {
+      setCloud({ status: "error", message: "No fue posible sincronizar ahora. Tus recuerdos locales siguen a salvo." });
+    }
+  }, [beginCloudSubscription, user]);
 
   const addDream = React.useCallback((draft: DreamDraft) => {
     const dream = makeDream(draft, idForDream(draft.title));
     const dreams = [...getClientSnapshot().dreams, dream];
     setState({ ...getClientSnapshot(), dreams, persistence: saveDreams(dreams), isReady: true });
+    if (user && cloud.status === "synced") void saveDreamToCloud(user.uid, dream).catch(() => setCloud({ status: "error", message: "Este recuerdo quedó localmente; la copia privada no pudo actualizarse." }));
     return dream;
-  }, []);
+  }, [cloud.status, user]);
 
   const updateDream = React.useCallback((id: string, draft: DreamDraft) => {
     const snapshot = getClientSnapshot();
@@ -94,8 +155,9 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
     const updated = { ...makeDream(draft, id, current.createdAt), hue: current.hue };
     const dreams = snapshot.dreams.map((dream) => (dream.id === id ? updated : dream));
     setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
+    if (user && cloud.status === "synced") void saveDreamToCloud(user.uid, updated).catch(() => setCloud({ status: "error", message: "El cambio quedó localmente; la copia privada no pudo actualizarse." }));
     return updated;
-  }, []);
+  }, [cloud.status, user]);
 
   const removeDream = React.useCallback((id: string) => {
     const snapshot = getClientSnapshot();
@@ -103,14 +165,16 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
     if (!current) return undefined;
     const dreams = snapshot.dreams.filter((dream) => dream.id !== id);
     setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
+    if (user && cloud.status === "synced") void deleteDreamFromCloud(user.uid, id).catch(() => setCloud({ status: "error", message: "El borrado quedó localmente; la copia privada no pudo actualizarse." }));
     return current;
-  }, []);
+  }, [cloud.status, user]);
 
   const restoreDream = React.useCallback((dream: Dream) => {
     const snapshot = getClientSnapshot();
     const dreams = snapshot.dreams.some((item) => item.id === dream.id) ? snapshot.dreams : [...snapshot.dreams, dream];
     setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
-  }, []);
+    if (user && cloud.status === "synced") void saveDreamToCloud(user.uid, dream).catch(() => setCloud({ status: "error", message: "La restauración quedó localmente; la copia privada no pudo actualizarse." }));
+  }, [cloud.status, user]);
 
   const resetDreams = React.useCallback(() => {
     clearAllLocalDreams();
@@ -129,8 +193,8 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const value = React.useMemo(
-    () => ({ ...state, addDream, updateDream, removeDream, restoreDream, resetDreams, getDream: (id: string) => state.dreams.find((dream) => dream.id === id), saveLocalDraft, clearLocalDraft }),
-    [addDream, clearLocalDraft, removeDream, resetDreams, restoreDream, saveLocalDraft, state, updateDream],
+    () => ({ ...state, addDream, updateDream, removeDream, restoreDream, resetDreams, getDream: (id: string) => state.dreams.find((dream) => dream.id === id), saveLocalDraft, clearLocalDraft, cloud, synchronizeWithCloud }),
+    [addDream, clearLocalDraft, cloud, removeDream, resetDreams, restoreDream, saveLocalDraft, state, synchronizeWithCloud, updateDream],
   );
 
   return <DreamStoreContext.Provider value={value}>{children}</DreamStoreContext.Provider>;

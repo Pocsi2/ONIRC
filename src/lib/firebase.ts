@@ -1,5 +1,6 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // Firebase web configuration identifies the project; it is not an admin secret.
 // Security is enforced with Firebase Authentication and Firestore rules.
@@ -15,3 +16,4 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const firebaseAuth = getAuth(app);
+export const firebaseDb = getFirestore(app);

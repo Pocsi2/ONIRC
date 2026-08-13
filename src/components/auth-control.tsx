@@ -110,7 +110,7 @@ export function AuthControl() {
                 <button type="button" className="material-button grid min-h-11 min-w-11 place-items-center rounded-[16px]" onClick={close} aria-label="Cerrar acceso" disabled={Boolean(pending)}><X className="h-4 w-4" /></button>
               </div>
 
-              <p className="mt-4 text-sm leading-6 text-text-secondary">Verifica tu cuenta ahora. La sincronización privada de memorias se activará al configurar Firestore.</p>
+              <p className="mt-4 text-sm leading-6 text-text-secondary">Verifica tu cuenta para poder crear una copia privada. Tú decides cuándo sincronizar tus recuerdos.</p>
               <Button type="button" variant="secondary" className="mt-6 w-full" onClick={useGoogle} disabled={Boolean(pending)}><Chrome className="h-4 w-4" />{pending === "google" ? "Abriendo Google…" : "Continuar con Google"}</Button>
               <div className="my-5 flex items-center gap-3 text-xs text-text-muted"><span className="h-px flex-1 bg-[var(--border-light)]" /> o con correo <span className="h-px flex-1 bg-[var(--border-light)]" /></div>
 

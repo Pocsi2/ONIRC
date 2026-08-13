@@ -25,12 +25,12 @@ export function HomeExperience() {
             Abrir mi calendario <ArrowRight className="h-4 w-4" />
           </ViewTransitionLink>
           <p className="flex items-center gap-2 text-sm leading-6 text-text-muted">
-            <LockKeyhole className="h-4 w-4 shrink-0" /> Se guarda sólo en este navegador.
+            <LockKeyhole className="h-4 w-4 shrink-0" /> Empieza sólo en este navegador.
           </p>
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <AuthControl />
-          <p className="flex items-center gap-2 text-sm leading-6 text-text-muted"><Cloud className="h-4 w-4 shrink-0" /> Conecta una cuenta para preparar tu sincronización privada.</p>
+          <p className="flex items-center gap-2 text-sm leading-6 text-text-muted"><Cloud className="h-4 w-4 shrink-0" /> Conecta una cuenta cuando quieras una copia privada.</p>
         </div>
       </motion.div>
 
