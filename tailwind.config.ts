@@ -28,6 +28,10 @@ const config: Config = {
           mint: "var(--color-soft-mint)",
           champagne: "var(--color-champagne)"
         },
+        memory: {
+          electric: "var(--color-memory-electric)",
+          accessible: "var(--color-memory-accessible)"
+        },
         text: {
           primary: "var(--text-primary)",
           secondary: "var(--text-secondary)",

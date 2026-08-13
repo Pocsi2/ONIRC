@@ -38,7 +38,7 @@ export function ViewTransitionLink({
     }
 
     event.preventDefault();
-    const transition = (document as ViewTransitionDocument).startViewTransition;
+    const transition = (document as ViewTransitionDocument).startViewTransition?.bind(document);
 
     if (onBeforeTransition) {
       flushSync(onBeforeTransition);

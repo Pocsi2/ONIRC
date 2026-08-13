@@ -1,24 +1,34 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ONEIRIC — Dream Calendar",
-  description: "A luminous visual prototype for preserving dreams in time.",
+  title: "Onirc — Diario de sueños local",
+  description: "Un calendario íntimo para recordar lo que soñaste, guardado sólo en este navegador.",
 };
 
 export const viewport: Viewport = {
   themeColor: "#FAFAF7",
-  colorScheme: "light",
+  colorScheme: "light dark",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const themeBootstrap = `(() => {
+  try {
+    const saved = localStorage.getItem('onirc:appearance:v1');
+    const preference = saved === 'day' || saved === 'night' || saved === 'system' ? saved : 'system';
+    const night = preference === 'night' || (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = night ? 'night' : 'day';
+    document.documentElement.style.colorScheme = night ? 'dark' : 'light';
+  } catch { document.documentElement.dataset.theme = 'day'; }
+})();`;
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="es" suppressHydrationWarning>
+      <body>
+        <Script id="onirc-theme" strategy="beforeInteractive">{themeBootstrap}</Script>
+        {children}
+      </body>
     </html>
   );
 }
