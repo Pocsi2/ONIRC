@@ -1,4 +1,6 @@
-# ONEIRIC Phase 5 — Usable Dream Journal MVP
+# Onirc — Historial de Phase 5
+
+> Documento histórico. La edición vigente es el diario local estático documentado en `DESIGN-BRIEF.md` y `docs/BRIEFING-COMPLIANCE.md`.
 
 Phase 5 turns the visual prototype into a usable local-first journal. Phase 6 now hardens that local persistence behind a replaceable data layer.
 

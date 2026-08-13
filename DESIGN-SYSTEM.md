@@ -1,13 +1,17 @@
-# ONEIRIC Design System
+# Onirc — Sistema de diseño
 
-The current canonical design-system content was found in `DESIGN-SYSTEM.txt` during Phase 4 intake.
+## Memoria nácar
 
-This Markdown file is present so the project has the expected root documentation structure:
+El sistema usa blanco cálido, perla, marfil, transparencias controladas y reflejos pastel de baja saturación. El rojo eléctrico sólo señala una memoria, un foco o una acción crítica; nunca domina una pantalla.
 
-```text
-DESIGN-BRIEF.md
-DESIGN-SYSTEM.md
-MOTION-SYSTEM.md
-```
+Los materiales son semánticos:
 
-Until the source documents are fully migrated, `DESIGN-SYSTEM.txt` remains the inspected source text for the design system.
+- **Perla:** superficies primarias y recuerdos.
+- **Frost:** navegación y controles elevados.
+- **Ópalo:** una memoria enfocada.
+- **Niebla:** atmósfera, nunca contenido esencial.
+- **Luz:** feedback breve.
+
+Los tokens de color, espacio, radios, sombras, capas y movimiento viven en `src/app/globals.css`. El tema redefine roles mediante `data-theme`, sin colores de tema dispersos por componentes.
+
+Las primitivas se mantienen deliberadamente pequeñas: superficie, botón, campo, perla, nube-cortina, calendario y lámina de composición. Ningún componente existe sólo como decoración.

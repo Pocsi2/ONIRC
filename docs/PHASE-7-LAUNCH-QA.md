@@ -1,4 +1,6 @@
-# ONEIRIC Phase 7 — Polish + Launch Readiness
+# Onirc — Historial de Phase 7
+
+> Documento histórico. La evidencia vigente está en `docs/QA-SCORECARD.md` y `docs/QA-ISSUES.md`.
 
 Phase 7 is the launch-readiness pass for the local-first MVP.
 

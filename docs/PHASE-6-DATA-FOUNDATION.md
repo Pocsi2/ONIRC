@@ -1,4 +1,6 @@
-# ONEIRIC Phase 6 — Persistence + Data Foundation
+# Onirc — Historial de Phase 6
+
+> Documento histórico. La persistencia vigente usa `onirc:dreams:v3` y migra los identificadores legacy sólo para preservar datos locales existentes.
 
 Phase 6 hardens the usable MVP without introducing authentication or a remote service. The application now has a clear migration seam for a future API or database.
 
