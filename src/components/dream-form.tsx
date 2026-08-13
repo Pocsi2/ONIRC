@@ -4,6 +4,7 @@ import * as React from "react";
 import { Check, Feather, Moon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { PageTransition } from "@/components/motion/page-transition";
+import { PersistenceStatus } from "@/components/persistence-status";
 import { Reveal } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
 import { DreamPearl } from "@/components/dream-pearl";
@@ -59,10 +60,11 @@ export function DreamForm({ mode, dream }: { mode: "create" | "edit"; dream?: Dr
 
   return (
     <PageTransition className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <motion.div initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={reducedMotion ? reducedTransition : transitions.expressive} className="surface-opal z-surface relative overflow-hidden rounded-[48px] p-6 sm:p-10 lg:p-14">
+      <motion.div initial={false} animate={{ opacity: 1, y: 0 }} transition={reducedMotion ? reducedTransition : transitions.expressive} className="surface-opal z-surface relative overflow-hidden rounded-[48px] p-6 sm:p-10 lg:p-14">
         <div className="absolute right-10 top-10 h-40 w-40 rounded-full bg-white/35 blur-3xl" />
         <div className="relative">
           <p className="text-xs font-medium uppercase tracking-[0.34em] text-text-muted">{isEditing ? "Edit memory" : "New dream"}</p>
+          <PersistenceStatus className="mt-4 max-w-md" />
           <h1 className="mt-5 max-w-3xl font-display text-[clamp(3.4rem,8vw,7.4rem)] leading-[.88] tracking-[-0.055em]">{isEditing ? "Stay with this one." : "Let's keep one."}</h1>
 
           <form className="mt-12 space-y-8" onSubmit={handleSubmit}>
@@ -96,7 +98,7 @@ export function DreamForm({ mode, dream }: { mode: "create" | "edit"; dream?: Dr
         </div>
       </motion.div>
 
-      <motion.aside initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={reducedMotion ? reducedTransition : { ...transitions.expressive, delay: 0.12 }} className="z-surface lg:sticky lg:top-32 lg:self-start">
+      <motion.aside initial={false} animate={{ opacity: 1, y: 0 }} transition={reducedMotion ? reducedTransition : { ...transitions.expressive, delay: 0.12 }} className="z-surface lg:sticky lg:top-32 lg:self-start">
         <div className="surface-frost rounded-[42px] p-7">
           <div className="mb-8 flex items-center justify-between"><p className="text-xs uppercase tracking-[0.26em] text-text-muted">Preview</p><Moon className="h-4 w-4 text-text-muted" /></div>
           <div className="relative mx-auto mb-8 grid h-40 w-40 place-items-center"><DreamPearl dream={savedDream ?? preview} size="lg" selected={Boolean(savedDream)} interactive transitionName={savedDream ? `dream-${savedDream.id}` : undefined} /></div>

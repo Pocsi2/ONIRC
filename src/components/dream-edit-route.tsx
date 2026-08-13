@@ -11,7 +11,13 @@ export function DreamEditRoute({ dreamId, initialDream }: { dreamId: string; ini
   const { getDream, isReady } = useDreamStore();
   const dream = getDream(dreamId) ?? initialDream;
 
-  if (!isReady) return null;
+  if (!isReady) {
+    return (
+      <PageTransition className="mx-auto max-w-xl text-center">
+        <p role="status" aria-live="polite" className="text-sm text-text-muted">Gathering your memories...</p>
+      </PageTransition>
+    );
+  }
   if (!dream) {
     return (
       <PageTransition className="mx-auto max-w-xl text-center">

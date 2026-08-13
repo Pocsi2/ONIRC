@@ -15,7 +15,7 @@ export function PageTransition({
 
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       animate="visible"
       variants={
         reducedMotion

@@ -23,7 +23,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
   return (
     <PageTransition className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
       <motion.aside
-        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="z-surface lg:sticky lg:top-32 lg:self-start"
@@ -70,7 +70,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
       </motion.aside>
 
       <motion.div
-        initial="hidden"
+        initial={false}
         animate="visible"
         variants={
           reducedMotion
@@ -95,7 +95,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
           </div>
 
           <motion.p
-            initial="hidden"
+            initial={false}
             animate="visible"
             variants={
               reducedMotion
@@ -107,7 +107,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
             {formatDreamDate(dream.date)}
           </motion.p>
           <motion.h1
-            initial="hidden"
+            initial={false}
             animate="visible"
             variants={
               reducedMotion
@@ -120,7 +120,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
           </motion.h1>
 
           <motion.p
-            initial="hidden"
+            initial={false}
             animate="visible"
             variants={
               reducedMotion
@@ -133,7 +133,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
           </motion.p>
 
           <motion.div
-            initial="hidden"
+            initial={false}
             animate="visible"
             variants={
               reducedMotion
@@ -155,7 +155,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
           </motion.div>
 
           {confirmingDelete ? (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-5 flex flex-col gap-3 rounded-[22px] border border-white/60 bg-white/55 p-4 text-sm text-text-secondary sm:flex-row sm:items-center sm:justify-between">
+            <motion.div role="alert" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-5 flex flex-col gap-3 rounded-[22px] border border-white/60 bg-white/55 p-4 text-sm text-text-secondary sm:flex-row sm:items-center sm:justify-between">
               <span>Let this memory leave the calendar?</span>
               <div className="flex gap-2">
                 <Button variant="ghost" onClick={() => setConfirmingDelete(false)}>Keep it</Button>

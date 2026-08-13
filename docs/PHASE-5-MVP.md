@@ -1,10 +1,10 @@
 # ONEIRIC Phase 5 — Usable Dream Journal MVP
 
-Phase 5 turns the visual prototype into a usable local-first journal while keeping backend work out of scope for Phase 6.
+Phase 5 turns the visual prototype into a usable local-first journal. Phase 6 now hardens that local persistence behind a replaceable data layer.
 
 ## Product decision
 
-The temporary persistence adapter is browser `localStorage` under `oneiric:dreams:v1`. The UI consumes a small `useDreamStore` contract instead of reading storage directly. This keeps the next migration to a database or Supabase adapter contained.
+The UI consumes a small `useDreamStore` contract instead of reading storage directly. Browser persistence is implemented by the Phase 6 repository under `oneiric:dreams:v2`, with migration support for the original `v1` array.
 
 ## Included
 
@@ -17,16 +17,16 @@ The temporary persistence adapter is browser `localStorage` under `oneiric:dream
 - Preserve the pearl-to-memory visual relationship for created and edited dreams.
 - Keep keyboard labels, focus states, readable confirmations, and reduced-motion behavior.
 
-## Deliberately deferred
+## Out of scope for the local-first MVP
 
 - Authentication.
-- Database or Supabase persistence.
+- Remote database persistence.
 - Multi-user synchronization.
 - AI, export, analytics, and dark mode.
 
-## Migration seam for Phase 6
+## Migration seam for remote persistence
 
-The Phase 6 persistence layer should implement the operations currently exposed by `useDreamStore`:
+The future remote persistence layer should implement the operations currently exposed by `useDreamStore`:
 
 - `addDream`
 - `updateDream`

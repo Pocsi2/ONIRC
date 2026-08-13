@@ -24,6 +24,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <DreamStoreProvider>
       <div className="relative min-h-screen overflow-hidden">
         <Atmosphere />
+      <a href="#main-content" className="sr-only z-feedback focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:text-sm focus:shadow-soft">
+        Skip to memory
+      </a>
       <header className="pointer-events-none fixed inset-x-0 top-0 z-navigation px-4 py-4 sm:px-6 lg:px-8">
         <nav className="pointer-events-auto mx-auto flex max-w-[1440px] items-center justify-between gap-4">
           <ViewTransitionLink
@@ -75,11 +78,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
 
-      <main className="relative z-surface mx-auto min-h-screen max-w-[1440px] px-4 pb-28 pt-28 sm:px-6 lg:px-8">
+      <main id="main-content" className="relative z-surface mx-auto min-h-screen max-w-[1440px] px-4 pb-28 pt-28 sm:px-6 lg:px-8">
         {children}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-4 z-navigation px-4 md:hidden" aria-label="Mobile navigation">
+      <nav className="fixed inset-x-0 bottom-4 z-navigation px-4 pb-[env(safe-area-inset-bottom)] md:hidden" aria-label="Mobile navigation">
         <div className="surface-frost mx-auto grid max-w-sm grid-cols-3 rounded-[24px] p-1">
           {navItems.map((item) => {
             const Icon = item.icon;

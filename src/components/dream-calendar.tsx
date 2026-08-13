@@ -4,6 +4,7 @@ import * as React from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Moon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { PageTransition } from "@/components/motion/page-transition";
+import { PersistenceStatus } from "@/components/persistence-status";
 import { Reveal } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
 import { DreamPearl } from "@/components/dream-pearl";
@@ -68,6 +69,7 @@ export function DreamCalendar({ highlightDreamId }: { highlightDreamId?: string 
   }, [dreams, highlightDreamId, isReady]);
 
   const isReceded = focusedDreamId !== null;
+  const nearestDream = dreams.find((dream) => dream.id === featuredDream.id) ?? dreams[0];
   const shiftMonth = (amount: number) => {
     setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1));
   };
@@ -75,7 +77,7 @@ export function DreamCalendar({ highlightDreamId }: { highlightDreamId?: string 
   return (
     <PageTransition className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_390px]">
       <motion.div
-        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="z-calendar min-w-0"
@@ -86,6 +88,7 @@ export function DreamCalendar({ highlightDreamId }: { highlightDreamId?: string 
             <h1 className="mt-4 font-display text-[clamp(3.25rem,8vw,7rem)] leading-[.9] tracking-[-0.055em]">
               {monthLabel(visibleMonth)}, softly remembered.
             </h1>
+            <PersistenceStatus className="mt-4 max-w-md" />
           </div>
           <div className="surface-frost flex w-fit items-center gap-1 rounded-[22px] p-1">
             <Button variant="ghost" size="sm" aria-label="Previous month" onClick={() => shiftMonth(-1)}>
@@ -166,33 +169,51 @@ export function DreamCalendar({ highlightDreamId }: { highlightDreamId?: string 
                 </div>
               );
             })}
+            {isReady && Object.keys(dreamMap).length === 0 ? (
+              <div className="col-span-7 rounded-[28px] border border-white/45 bg-white/20 px-6 py-10 text-center">
+                <p className="font-display text-3xl">Nothing surfaced here yet.</p>
+                <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-text-secondary">Move through time or keep a dream to give this month its first pearl.</p>
+                <ViewTransitionLink href="/new" className="mt-5 inline-flex min-h-11 items-center rounded-[16px] bg-white/70 px-5 text-sm font-medium text-text-primary shadow-soft">Keep a dream</ViewTransitionLink>
+              </div>
+            ) : null}
           </div>
         </motion.div>
       </motion.div>
 
       <motion.aside
-        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={reducedMotion ? reducedTransition : { ...transitions.expressive, delay: 0.12 }}
         className="z-surface lg:sticky lg:top-28 lg:self-start"
       >
         <div className="surface-opal overflow-hidden rounded-[42px] p-7">
+          {nearestDream ? (
+            <>
           <div className="mb-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <DreamPearl dream={featuredDream} size="lg" selected interactive />
+              <DreamPearl dream={nearestDream} size="lg" selected interactive />
               <div>
                 <p className="text-xs uppercase tracking-[0.25em] text-text-muted">nearest memory</p>
-                <p className="mt-1 text-sm text-text-secondary">{shortDreamDate(featuredDream.date)}</p>
+                <p className="mt-1 text-sm text-text-secondary">{shortDreamDate(nearestDream.date)}</p>
               </div>
             </div>
             <Moon className="h-4 w-4 text-text-muted" />
           </div>
 
-          <h2 className="font-display text-5xl leading-[.95] tracking-[-0.045em]">{featuredDream.title}</h2>
-          <p className="mt-5 text-sm leading-7 text-text-secondary">{featuredDream.summary}</p>
-          <ViewTransitionLink href={`/dreams/${featuredDream.id}`} className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-text-primary" onBeforeTransition={() => setFocusedDreamId(featuredDream.id)}>
+          <h2 className="font-display text-5xl leading-[.95] tracking-[-0.045em]">{nearestDream.title}</h2>
+          <p className="mt-5 text-sm leading-7 text-text-secondary">{nearestDream.summary}</p>
+          <ViewTransitionLink href={`/dreams/${nearestDream.id}`} className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-text-primary" onBeforeTransition={() => setFocusedDreamId(nearestDream.id)}>
             Move closer <ArrowRight className="h-4 w-4" />
           </ViewTransitionLink>
+            </>
+          ) : (
+            <>
+              <p className="text-xs uppercase tracking-[0.25em] text-text-muted">Your landscape is open</p>
+              <h2 className="mt-5 font-display text-5xl leading-[.95] tracking-[-0.045em]">A first pearl is waiting.</h2>
+              <p className="mt-5 text-sm leading-7 text-text-secondary">There are no memories here yet. Begin with one fragment.</p>
+              <ViewTransitionLink href="/new" className="mt-8 inline-flex min-h-11 items-center rounded-[16px] bg-white/70 px-5 text-sm font-medium text-text-primary shadow-soft">Keep a dream</ViewTransitionLink>
+            </>
+          )}
         </div>
 
         <Reveal variants={softReveal} delay={0.2} className="mt-6">

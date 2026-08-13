@@ -7,15 +7,19 @@ import { Button } from "@/components/ui/button";
 import { DreamPearl } from "@/components/dream-pearl";
 import { ViewTransitionLink } from "@/components/view-transition-link";
 import { dreams, featuredDream, formatDreamDate } from "@/lib/dreams";
+import { useDreamStore } from "@/lib/dreams-store";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
 export function HomeExperience() {
   const reducedMotion = useReducedMotion();
+  const { dreams: storedDreams } = useDreamStore();
+  const homeDreams = storedDreams.length > 0 ? storedDreams : dreams;
+  const homeFeaturedDream = homeDreams.find((dream) => dream.id === featuredDream.id) ?? homeDreams[0] ?? featuredDream;
 
   return (
     <PageTransition className="grid min-h-[calc(100vh-8rem)] items-center gap-12 lg:grid-cols-[1.05fr_.95fr]">
       <motion.div
-        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="max-w-3xl"
@@ -47,7 +51,7 @@ export function HomeExperience() {
       </motion.div>
 
       <motion.div
-        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: 24 }}
+        initial={false}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={reducedMotion ? reducedTransition : { ...transitions.dream, delay: 0.08 }}
         className="relative mx-auto w-full max-w-xl"
@@ -68,7 +72,7 @@ export function HomeExperience() {
             <div className="absolute inset-7 rounded-full border border-white/55" />
             <div className="absolute inset-x-14 top-1/2 h-px bg-gradient-to-r from-transparent via-[#dedbd4]/70 to-transparent" />
             <div className="absolute inset-y-12 left-1/2 w-px bg-gradient-to-b from-transparent via-white/90 to-transparent" />
-            {dreams.map((dream, index) => (
+            {homeDreams.map((dream, index) => (
               <ViewTransitionLink
                 key={dream.id}
                 href={`/dreams/${dream.id}`}
@@ -82,7 +86,7 @@ export function HomeExperience() {
                 <DreamPearl
                   dream={dream}
                   size={dream.id === featuredDream.id ? "lg" : "md"}
-                  selected={dream.id === featuredDream.id}
+                  selected={dream.id === homeFeaturedDream.id}
                   interactive
                   transitionName={`dream-${dream.id}`}
                 />
@@ -95,19 +99,17 @@ export function HomeExperience() {
         </div>
 
         <ViewTransitionLink
-          href={`/dreams/${featuredDream.id}`}
+          href={`/dreams/${homeFeaturedDream.id}`}
           className="surface-opal motion-dream relative -mt-16 ml-auto block max-w-sm rounded-[36px] p-6 transition hover:-translate-y-1 hover:shadow-focus"
         >
           <div className="mb-5 flex items-center gap-3">
-            <DreamPearl dream={featuredDream} size="sm" interactive />
+            <DreamPearl dream={homeFeaturedDream} size="sm" interactive />
             <span className="text-xs uppercase tracking-[0.24em] text-text-muted">
-              {formatDreamDate(featuredDream.date)}
+              {formatDreamDate(homeFeaturedDream.date)}
             </span>
           </div>
-          <h3 className="font-display text-4xl leading-none tracking-[-0.035em]">
-            {featuredDream.title}
-          </h3>
-          <p className="mt-4 text-sm leading-6 text-text-secondary">{featuredDream.summary}</p>
+          <h3 className="font-display text-4xl leading-none tracking-[-0.035em]">{homeFeaturedDream.title}</h3>
+          <p className="mt-4 text-sm leading-6 text-text-secondary">{homeFeaturedDream.summary}</p>
         </ViewTransitionLink>
       </motion.div>
     </PageTransition>
