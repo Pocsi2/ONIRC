@@ -3,7 +3,7 @@
 import type * as React from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { Dream } from "@/lib/dreams";
-import { motionSprings, transitions } from "@/lib/motion/tokens";
+import { motionSprings, reducedTransition, transitions } from "@/lib/motion/tokens";
 import { pearlMotion, withReducedMotion } from "@/lib/motion/variants";
 import { cn } from "@/lib/utils";
 
@@ -19,15 +19,19 @@ export function DreamPearl({
   dream,
   size = "md",
   selected = false,
+  focused = false,
   multiple = false,
   interactive = false,
+  transitionName,
   className,
 }: {
   dream: Dream;
   size?: "sm" | "md" | "lg" | "xl";
   selected?: boolean;
+  focused?: boolean;
   multiple?: boolean;
   interactive?: boolean;
+  transitionName?: string;
   className?: string;
 }) {
   const reducedMotion = useReducedMotion();
@@ -39,24 +43,31 @@ export function DreamPearl({
   }[size];
 
   const variants = withReducedMotion(pearlMotion, reducedMotion);
+  const sharedElementStyle = transitionName
+    ? ({ viewTransitionName: transitionName } as React.CSSProperties)
+    : undefined;
 
   return (
     <motion.span
-      layoutId={`dream-pearl-${dream.id}`}
-      style={{ viewTransitionName: `dream-${dream.id}` } as React.CSSProperties}
+      style={sharedElementStyle}
       initial={false}
-      animate={selected ? "selected" : "rest"}
+      animate={selected ? "selected" : focused ? "focus" : "rest"}
       whileHover={interactive && !reducedMotion ? "hover" : undefined}
-      whileFocus={interactive && !reducedMotion ? "focus" : undefined}
       whileTap={interactive && !reducedMotion ? "tap" : undefined}
       variants={variants}
       className={cn(
         "relative inline-grid shrink-0 place-items-center rounded-full will-change-transform",
         dimensions,
-        selected && "z-10",
+        (selected || focused) && "z-focus",
         className,
       )}
-      transition={interactive && !reducedMotion ? motionSprings.pearl : transitions.dream}
+      transition={
+        interactive && !reducedMotion
+          ? motionSprings.pearl
+          : reducedMotion
+            ? reducedTransition
+            : transitions.dream
+      }
     >
       <span
         className={cn(

@@ -16,8 +16,8 @@ import {
   shortDreamDate,
   visualSavedDream,
 } from "@/lib/dreams";
-import { transitions } from "@/lib/motion/tokens";
-import { calendarRecede, softReveal } from "@/lib/motion/variants";
+import { reducedTransition, transitions } from "@/lib/motion/tokens";
+import { calendarRecede, softReveal, withReducedMotion } from "@/lib/motion/variants";
 import { cn } from "@/lib/utils";
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -41,6 +41,7 @@ export function DreamCalendar({
     [revealKeptDream],
   );
   const dreamMap = dreamsByDay(calendarDreams);
+  const calendarVariants = withReducedMotion(calendarRecede, reducedMotion);
 
   React.useEffect(() => {
     if (!highlightedId) return;
@@ -55,7 +56,7 @@ export function DreamCalendar({
       <motion.div
         initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={transitions.expressive}
+        transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="z-calendar min-w-0"
       >
         <div className="mb-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
@@ -81,7 +82,7 @@ export function DreamCalendar({
         <motion.div
           animate={isReceded ? "receded" : "rest"}
           initial="rest"
-          variants={calendarRecede}
+          variants={calendarVariants}
           className="surface-frost relative overflow-hidden rounded-[44px] p-4 sm:p-8 lg:p-10"
         >
           <div className="absolute inset-x-12 top-20 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
@@ -103,7 +104,7 @@ export function DreamCalendar({
                 <div
                   key={day}
                   className={cn(
-                    "motion-standard relative flex min-h-[76px] items-center justify-center rounded-[28px] transition sm:min-h-[96px]",
+                    "motion-opacity relative flex min-h-[76px] items-center justify-center rounded-[28px] sm:min-h-[96px]",
                     hasDream ? "bg-white/24" : "bg-white/[0.10]",
                     isReceded && hasDream && !dayDreams.some((d) => d.id === focusedDreamId) && "opacity-40",
                   )}
@@ -115,9 +116,8 @@ export function DreamCalendar({
                     <div className="relative flex min-h-12 min-w-12 items-center justify-center">
                       <span className="absolute inset-0 rounded-full bg-white/40 blur-xl" />
                       {dayDreams.map((dream, index) => {
-                        const isSelected =
-                          dream.id === highlightedId ||
-                          dream.id === focusedDreamId;
+                        const isSelected = dream.id === highlightedId;
+                        const isFocused = dream.id === focusedDreamId;
                         const isNewKept = isKeptDay && dream.id === visualSavedDream.id && revealKeptDream;
 
                         return (
@@ -139,6 +139,8 @@ export function DreamCalendar({
                                   interactive
                                   multiple={dayDreams.length > 1}
                                   selected={isSelected}
+                                  focused={isFocused}
+                                  transitionName={`dream-${dream.id}`}
                                 />
                               </Reveal>
                             ) : (
@@ -148,6 +150,8 @@ export function DreamCalendar({
                                 interactive
                                 multiple={dayDreams.length > 1}
                                 selected={isSelected}
+                                focused={isFocused}
+                                transitionName={`dream-${dream.id}`}
                               />
                             )}
                             <span className="sr-only">{dream.title}</span>
@@ -171,7 +175,7 @@ export function DreamCalendar({
       <motion.aside
         initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ ...transitions.expressive, delay: 0.12 }}
+        transition={reducedMotion ? reducedTransition : { ...transitions.expressive, delay: 0.12 }}
         className="z-surface lg:sticky lg:top-28 lg:self-start"
       >
         <div className="surface-opal overflow-hidden rounded-[42px] p-7">

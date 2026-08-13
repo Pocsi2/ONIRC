@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { Variants } from "motion/react";
 import { softReveal } from "@/lib/motion/variants";
+import { reducedTransition } from "@/lib/motion/tokens";
 
 export function Reveal({
   children,
@@ -25,7 +26,7 @@ export function Reveal({
         reducedMotion
           ? {
               hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { duration: 0.1, delay } },
+              visible: { opacity: 1, transition: { ...reducedTransition, delay } },
             }
           : variants
       }

@@ -1,11 +1,11 @@
 "use client";
 
 import { CalendarDays, Feather, Moon, Plus } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { Atmosphere } from "@/components/atmosphere";
 import { ViewTransitionLink } from "@/components/view-transition-link";
-import { transitions } from "@/lib/motion/tokens";
+import { reducedTransition, transitions } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -16,6 +16,8 @@ const navItems = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const reducedMotion = useReducedMotion();
+  const navTransition = reducedMotion ? reducedTransition : transitions.standard;
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -51,7 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <motion.span
                       layoutId="nav-presence"
                       className="absolute inset-0 rounded-[16px] bg-white/68 shadow-soft"
-                      transition={transitions.standard}
+                      transition={navTransition}
                     />
                   ) : null}
                   <Icon className="relative h-4 w-4" />
@@ -89,7 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   active && "text-text-primary",
                 )}
               >
-                {active ? <motion.span layoutId="mobile-nav-presence" transition={transitions.standard} className="absolute inset-0 rounded-[18px] bg-white/70 shadow-soft" /> : null}
+                {active ? <motion.span layoutId="mobile-nav-presence" transition={navTransition} className="absolute inset-0 rounded-[18px] bg-white/70 shadow-soft" /> : null}
                 <Icon className="relative h-4 w-4" />
                 <span className="relative">{item.label}</span>
               </ViewTransitionLink>

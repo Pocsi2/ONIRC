@@ -1,21 +1,23 @@
 "use client";
 
 import { ArrowRight, CalendarDays, Feather } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { PageTransition } from "@/components/motion/page-transition";
 import { Button } from "@/components/ui/button";
 import { DreamPearl } from "@/components/dream-pearl";
 import { ViewTransitionLink } from "@/components/view-transition-link";
 import { dreams, featuredDream, formatDreamDate } from "@/lib/dreams";
-import { transitions } from "@/lib/motion/tokens";
+import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
 export function HomeExperience() {
+  const reducedMotion = useReducedMotion();
+
   return (
     <PageTransition className="grid min-h-[calc(100vh-8rem)] items-center gap-12 lg:grid-cols-[1.05fr_.95fr]">
       <motion.div
-        initial={{ opacity: 0, y: 18 }}
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={transitions.expressive}
+        transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="max-w-3xl"
       >
         <p className="mb-8 text-xs font-medium uppercase tracking-[0.34em] text-text-muted">
@@ -45,9 +47,9 @@ export function HomeExperience() {
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.98, y: 24 }}
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ ...transitions.dream, delay: 0.08 }}
+        transition={reducedMotion ? reducedTransition : { ...transitions.dream, delay: 0.08 }}
         className="relative mx-auto w-full max-w-xl"
       >
         <div className="surface-frost relative overflow-hidden rounded-[44px] p-6 sm:p-8">
@@ -77,7 +79,13 @@ export function HomeExperience() {
                 }}
                 aria-label={`Open ${dream.title}`}
               >
-                <DreamPearl dream={dream} size={dream.id === featuredDream.id ? "lg" : "md"} selected={dream.id === featuredDream.id} interactive />
+                <DreamPearl
+                  dream={dream}
+                  size={dream.id === featuredDream.id ? "lg" : "md"}
+                  selected={dream.id === featuredDream.id}
+                  interactive
+                  transitionName={`dream-${dream.id}`}
+                />
                 <span className="motion-standard pointer-events-none absolute left-1/2 top-9 w-40 -translate-x-1/2 rounded-2xl bg-white/70 px-3 py-2 text-center text-xs text-text-secondary opacity-0 shadow-soft backdrop-blur-xl transition group-hover:opacity-100 group-focus-visible:opacity-100">
                   {dream.title}
                 </span>

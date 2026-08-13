@@ -54,3 +54,8 @@ export const transitions = {
     ease: motionEase.dream,
   },
 } satisfies Record<string, Transition>;
+
+export const reducedTransition = {
+  ...transitions.instant,
+  ease: motionEase.softOut,
+} satisfies Transition;

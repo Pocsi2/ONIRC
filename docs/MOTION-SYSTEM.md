@@ -150,6 +150,15 @@ Implementation guidance:
 - Do not force fragile shared layout if route architecture makes it unreliable.
 - Reduced-motion mode should preserve the sequence as hierarchy changes, not as large movement.
 
+### Final implementation decision
+
+ONEIRIC uses a hybrid route strategy:
+
+- Native View Transitions preserve the named pearl between calendar and detail routes.
+- Motion for React owns local pearl states, page reveals, receding calendar priority, navigation presence, and progressive disclosure.
+- `layoutId` is not used for cross-route pearl continuity because the App Router can remount those trees and the same dream can appear in more than one preview on a page.
+- When View Transitions are unsupported, the same links continue through normal router navigation with the same hierarchy and accessible labels.
+
 ## Return transition: Memory → Pearl
 
 Returning to the calendar should feel like moving back from the memory into time.
@@ -208,6 +217,8 @@ When `prefers-reduced-motion: reduce` is active:
 
 Reduced motion must not reduce meaning.
 
+Semantic reduced-motion behavior uses the `motionInstant` token. It removes atmospheric drift and large transforms while preserving selected, focused, entered, and confirmed states.
+
 ## Performance
 
 The motion budget prioritizes:
@@ -225,3 +236,14 @@ Avoid:
 - animating many large blurred surfaces
 
 The interface should feel alive because relationships are coherent, not because effects are numerous.
+
+## Semantic motion API
+
+The implementation exposes intention-based primitives and variants:
+
+- `PageTransition` / `pageEnter`: page arrival.
+- `Reveal` / `softReveal`: quiet content emergence.
+- `dreamReveal`: entering the deeper memory layer.
+- `pearlMotion`: rest, hover, focus, selected, and press states.
+- `calendarRecede`: surrounding time losing priority around a chosen memory.
+- `transitions` and `reducedTransition`: semantic timing and fallback behavior.

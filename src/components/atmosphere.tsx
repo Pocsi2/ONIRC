@@ -11,17 +11,17 @@ export function Atmosphere() {
       <div className="absolute inset-0 z-background bg-[radial-gradient(circle_at_50%_-10%,rgba(255,255,255,.98),rgba(250,250,247,.92)_42%,rgba(243,241,237,.82)_100%)]" />
 
       <motion.div
-        className="absolute -left-[12vw] top-[4vh] z-atmosphere h-[46vh] w-[46vw] rounded-full bg-mist-cyan/30 blur-3xl will-change-transform"
+        className="absolute -left-[12vw] top-[4vh] z-atmosphere h-[46vh] w-[46vw] rounded-full bg-mist-cyan/24 blur-3xl will-change-transform"
         animate={reducedMotion ? undefined : { x: [0, 16, -6, 0], y: [0, -10, 6, 0] }}
         transition={{ duration: motionDurations.ambientSlower, repeat: Infinity, ease: motionEase.dream }}
       />
       <motion.div
-        className="absolute right-[-18vw] top-[14vh] z-atmosphere h-[58vh] w-[48vw] rounded-full bg-mist-lavender/28 blur-3xl will-change-transform"
+        className="absolute right-[-18vw] top-[14vh] z-atmosphere hidden h-[58vh] w-[48vw] rounded-full bg-mist-lavender/22 blur-3xl will-change-transform md:block"
         animate={reducedMotion ? undefined : { x: [0, -14, 8, 0], y: [0, 12, -4, 0] }}
         transition={{ duration: motionDurations.ambientSlower + 6, repeat: Infinity, ease: motionEase.dream }}
       />
       <motion.div
-        className="absolute bottom-[-18vh] left-[24vw] z-atmosphere h-[44vh] w-[42vw] rounded-full bg-mist-champagne/30 blur-3xl will-change-transform"
+        className="absolute bottom-[-18vh] left-[24vw] z-atmosphere hidden h-[44vh] w-[42vw] rounded-full bg-mist-champagne/22 blur-3xl will-change-transform sm:block"
         animate={reducedMotion ? undefined : { x: [0, 10, -8, 0], y: [0, -8, 10, 0] }}
         transition={{ duration: motionDurations.ambientSlower + 10, repeat: Infinity, ease: motionEase.dream }}
       />

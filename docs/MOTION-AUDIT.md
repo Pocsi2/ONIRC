@@ -125,3 +125,16 @@ Changes applied in Phase 4:
 Remaining caveat:
 
 - The root `DESIGN-BRIEF.md` and `DESIGN-SYSTEM.md` files exist, but their full canonical content remains in the original `.txt` files. The `.md` files are structural anchors for now. A future documentation cleanup should migrate the full text into Markdown to remove that ambiguity.
+
+## Final pass — decisions and verification
+
+The final implementation uses a hybrid route strategy:
+
+- Motion for React owns local pearl rest, hover, focus, press, selected, and multiple states.
+- Native View Transitions preserve a named pearl between the calendar and detail routes when the browser supports them.
+- Cross-route `layoutId` was intentionally removed because App Router remounts can make it fragile and the same dream can appear in multiple previews.
+- Calendar receding is opacity-only; empty dates remain nearly still.
+- Atmosphere is lower contrast and less complex on small screens. No particles were added.
+- Reduced-motion paths use the instant semantic token and preserve state feedback and hierarchy.
+- `npm run lint`, `npm run typecheck`, and `npm run build` pass.
+- The in-app browser could not reach the host-local development port in this environment; a final human visual pass in a local browser remains recommended.

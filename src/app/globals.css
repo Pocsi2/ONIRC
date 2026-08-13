@@ -130,6 +130,16 @@ textarea {
   animation-timing-function: var(--ease-dream);
 }
 
+::view-transition-group(*) {
+  animation-duration: var(--motion-dream);
+  animation-timing-function: var(--ease-dream);
+}
+
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-timing-function: var(--ease-dream);
+}
+
 @layer utilities {
   .font-display {
     font-family: var(--font-display);
@@ -205,9 +215,22 @@ textarea {
     transition-timing-function: var(--ease-soft-out);
   }
 
+  .motion-opacity {
+    transition-property: opacity;
+    transition-duration: var(--motion-standard);
+    transition-timing-function: var(--ease-soft-out);
+  }
+
   .motion-dream {
     transition-duration: var(--motion-dream);
     transition-timing-function: var(--ease-dream);
+  }
+}
+
+@media (max-width: 767px) {
+  .surface-frost,
+  .surface-opal {
+    backdrop-filter: blur(18px);
   }
 }
 

@@ -45,7 +45,9 @@ export function ViewTransitionLink({
     }
 
     if (transition) {
-      transition(() => router.push(href));
+      transition(() => {
+        flushSync(() => router.push(href));
+      });
       return;
     }
 

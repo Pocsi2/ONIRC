@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ViewTransitionLink } from "@/components/view-transition-link";
 import type { Dream } from "@/lib/dreams";
 import { visualSavedDream } from "@/lib/dreams";
-import { transitions } from "@/lib/motion/tokens";
+import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
 function previewDream(body: string, date: string, title: string): Dream {
   return {
@@ -46,14 +46,15 @@ export function NewDreamForm() {
         initial: { opacity: 0, y: 12 },
         animate: { opacity: 1, y: 0 },
         exit: { opacity: 0, y: 8 },
-      };
+    };
+  const presenceTransition = reducedMotion ? reducedTransition : transitions.standard;
 
   return (
     <PageTransition className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
       <motion.div
         initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={transitions.expressive}
+        transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="surface-opal z-surface relative overflow-hidden rounded-[48px] p-6 sm:p-10 lg:p-14"
       >
         <div className="absolute right-10 top-10 h-40 w-40 rounded-full bg-white/35 blur-3xl" />
@@ -88,7 +89,7 @@ export function NewDreamForm() {
               {body.trim().length > 8 ? (
                 <motion.div
                   {...presenceVariants}
-                  transition={transitions.standard}
+                  transition={presenceTransition}
                   className="grid gap-6 sm:grid-cols-2"
                 >
                   <label className="block">
@@ -129,7 +130,7 @@ export function NewDreamForm() {
       <motion.aside
         initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ ...transitions.expressive, delay: 0.12 }}
+        transition={reducedMotion ? reducedTransition : { ...transitions.expressive, delay: 0.12 }}
         className="z-surface lg:sticky lg:top-32 lg:self-start"
       >
         <div className="surface-frost rounded-[42px] p-7">
@@ -138,7 +139,13 @@ export function NewDreamForm() {
             <Moon className="h-4 w-4 text-text-muted" />
           </div>
           <div className="relative mx-auto mb-8 grid h-40 w-40 place-items-center">
-            <DreamPearl dream={dream} size="lg" selected={kept} interactive />
+            <DreamPearl
+              dream={dream}
+              size="lg"
+              selected={kept}
+              interactive
+              transitionName={kept ? `dream-${dream.id}` : undefined}
+            />
           </div>
           <p className="text-sm text-text-muted">{date || "Unplaced in time"}</p>
           <h2 className="mt-3 font-display text-4xl leading-none tracking-[-0.04em]">
@@ -152,7 +159,7 @@ export function NewDreamForm() {
             {kept ? (
               <motion.div
                 {...presenceVariants}
-                transition={transitions.standard}
+                transition={presenceTransition}
                 className="mt-8 space-y-4 rounded-[22px] bg-white/55 p-4"
               >
                 <div className="flex items-center gap-3 text-sm text-text-secondary">

@@ -8,7 +8,7 @@ import { DreamPearl } from "@/components/dream-pearl";
 import { ViewTransitionLink } from "@/components/view-transition-link";
 import type { Dream } from "@/lib/dreams";
 import { formatDreamDate } from "@/lib/dreams";
-import { transitions } from "@/lib/motion/tokens";
+import { reducedTransition, transitions } from "@/lib/motion/tokens";
 import { dreamReveal, staggeredDreamReveal } from "@/lib/motion/variants";
 
 export function DreamDetail({ dream }: { dream: Dream }) {
@@ -19,7 +19,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
       <motion.aside
         initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={transitions.expressive}
+        transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="z-surface lg:sticky lg:top-32 lg:self-start"
       >
         <Button asChild variant="secondary">
@@ -76,7 +76,7 @@ export function DreamDetail({ dream }: { dream: Dream }) {
 
         <div className="relative">
           <div className="mb-12 flex items-center justify-between gap-8">
-            <DreamPearl dream={dream} size="xl" selected />
+            <DreamPearl dream={dream} size="xl" selected transitionName={`dream-${dream.id}`} />
             <p className="max-w-[220px] text-right text-xs uppercase leading-6 tracking-[0.24em] text-text-muted">
               preserved as light inside August
             </p>
@@ -85,7 +85,11 @@ export function DreamDetail({ dream }: { dream: Dream }) {
           <motion.p
             initial="hidden"
             animate="visible"
-            variants={staggeredDreamReveal(0.2)}
+            variants={
+              reducedMotion
+                ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { ...reducedTransition, delay: 0.2 } } }
+                : staggeredDreamReveal(0.2)
+            }
             className="text-sm text-text-muted"
           >
             {formatDreamDate(dream.date)}
@@ -93,7 +97,11 @@ export function DreamDetail({ dream }: { dream: Dream }) {
           <motion.h1
             initial="hidden"
             animate="visible"
-            variants={staggeredDreamReveal(0.28)}
+            variants={
+              reducedMotion
+                ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { ...reducedTransition, delay: 0.28 } } }
+                : staggeredDreamReveal(0.28)
+            }
             className="mt-5 max-w-4xl font-display text-[clamp(3.8rem,9vw,8.8rem)] leading-[.86] tracking-[-0.06em] text-text-primary"
           >
             {dream.title}
@@ -102,7 +110,11 @@ export function DreamDetail({ dream }: { dream: Dream }) {
           <motion.p
             initial="hidden"
             animate="visible"
-            variants={staggeredDreamReveal(0.42)}
+            variants={
+              reducedMotion
+                ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { ...reducedTransition, delay: 0.42 } } }
+                : staggeredDreamReveal(0.42)
+            }
             className="dream-reading mt-10 text-lg text-text-secondary sm:text-xl"
           >
             {dream.body}
@@ -111,7 +123,11 @@ export function DreamDetail({ dream }: { dream: Dream }) {
           <motion.div
             initial="hidden"
             animate="visible"
-            variants={staggeredDreamReveal(0.52)}
+            variants={
+              reducedMotion
+                ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { ...reducedTransition, delay: 0.52 } } }
+                : staggeredDreamReveal(0.52)
+            }
             className="mt-14 flex flex-col gap-3 border-t border-white/55 pt-8 sm:flex-row sm:items-center sm:justify-between"
           >
             <p className="text-sm text-text-muted">The calendar is still behind this memory.</p>

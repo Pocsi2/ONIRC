@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import { pageEnter } from "@/lib/motion/variants";
+import { reducedTransition } from "@/lib/motion/tokens";
 
 export function PageTransition({
   children,
@@ -19,8 +20,8 @@ export function PageTransition({
       variants={
         reducedMotion
           ? {
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { duration: 0.1 } },
+            hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: reducedTransition },
             }
           : pageEnter
       }
