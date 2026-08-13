@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Globe2, LockKeyhole, Pencil, Trash2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { DreamPearl } from "@/components/dream-pearl";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,12 @@ import type { Dream } from "@/lib/dreams";
 import { formatDreamDate } from "@/lib/dreams";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
-export function DreamFocus({ dream, onBack, onEdit, onDelete }: { dream: Dream; onBack: () => void; onEdit: () => void; onDelete: () => void }) {
+export function DreamFocus({ dream, onBack, onEdit, onDelete, canShare, onPublish, onMakePrivate }: { dream: Dream; onBack: () => void; onEdit: () => void; onDelete: () => void; canShare: boolean; onPublish: () => void; onMakePrivate: () => void }) {
   const reducedMotion = useReducedMotion();
   const backRef = React.useRef<HTMLButtonElement>(null);
   const [confirming, setConfirming] = React.useState(false);
+  const [confirmingPublic, setConfirmingPublic] = React.useState(false);
+  const isPublic = dream.visibility === "public";
 
   React.useEffect(() => {
     window.setTimeout(() => backRef.current?.focus(), 30);
@@ -37,7 +39,7 @@ export function DreamFocus({ dream, onBack, onEdit, onDelete }: { dream: Dream; 
           <div className="relative">
             <div className="flex items-start justify-between gap-8">
               <DreamPearl dream={dream} size="xl" selected layoutId={`pearl-${dream.id}`} />
-              <p className="max-w-[13rem] pt-2 text-right text-xs uppercase leading-6 tracking-[0.22em] text-text-muted">Un recuerdo guardado en este dispositivo</p>
+              <p className="max-w-[13rem] pt-2 text-right text-xs uppercase leading-6 tracking-[0.22em] text-text-muted">{isPublic ? "Una copia vive en el espacio público" : "Un recuerdo privado"}</p>
             </div>
             <p className="mt-12 text-sm text-text-muted sm:mt-16">{formatDreamDate(dream.date)}</p>
             <h1 className="mt-5 max-w-4xl font-display text-balance text-[clamp(4rem,10vw,9rem)] leading-[.84] tracking-[-0.065em]">{dream.title}</h1>
@@ -46,9 +48,20 @@ export function DreamFocus({ dream, onBack, onEdit, onDelete }: { dream: Dream; 
               <p className="max-w-md text-sm leading-6 text-text-muted">El calendario sigue detrás de esta memoria.</p>
               <div className="flex flex-wrap gap-2">
                 <Button variant="secondary" onClick={onEdit}><Pencil className="h-4 w-4" />Editar</Button>
+                {isPublic ? <Button variant="secondary" onClick={onMakePrivate}><LockKeyhole className="h-4 w-4" />Hacer privado</Button> : <Button variant="secondary" onClick={() => setConfirmingPublic(true)} disabled={!canShare}><Globe2 className="h-4 w-4" />Hacerlo público</Button>}
                 <Button variant="ghost" onClick={() => setConfirming(true)}><Trash2 className="h-4 w-4" />Eliminar</Button>
               </div>
             </div>
+            {!isPublic && !canShare ? <p className="mt-4 text-sm leading-6 text-text-muted">Sincroniza una copia privada con tu cuenta antes de compartir.</p> : null}
+            {confirmingPublic ? (
+              <div className="mt-6 rounded-[22px] border border-white/55 bg-white/48 p-4 text-sm leading-6 text-text-secondary [html[data-theme=night]_&]:border-white/10 [html[data-theme=night]_&]:bg-white/[.06]" role="alert">
+                <p>¿Hacer público “{dream.title}”? Crearemos una copia visible para cualquiera. Tu memoria original seguirá siendo privada y podrás retirarla cuando quieras.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button variant="secondary" onClick={() => { onPublish(); setConfirmingPublic(false); }}><Globe2 className="h-4 w-4" />Compartir públicamente</Button>
+                  <button type="button" className="min-h-10 px-3 text-sm" onClick={() => setConfirmingPublic(false)}>Mantener privado</button>
+                </div>
+              </div>
+            ) : null}
             {confirming ? (
               <div className="mt-6 rounded-[22px] border border-[rgba(185,14,49,.2)] bg-[rgba(185,14,49,.08)] p-4 text-sm leading-6 text-text-secondary [html[data-theme=night]_&]:border-[rgba(255,138,152,.26)] [html[data-theme=night]_&]:bg-[rgba(255,138,152,.1)]" role="alert">
                 <p>¿Eliminar “{dream.title}”? Podrás deshacer esta acción durante unos segundos.</p>

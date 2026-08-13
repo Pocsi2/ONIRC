@@ -13,5 +13,20 @@ service cloud.firestore {
         allow read, create, update, delete: if owns(userId);
       }
     }
+
+    // A published dream is a deliberate, separate copy. Private memories never
+    // become readable merely by changing a field in the user's private path.
+    match /publicDreams/{publicDreamId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['id', 'ownerId', 'sourceDreamId', 'date', 'title', 'body', 'hue', 'createdAt', 'updatedAt', 'publishedAt'])
+                    && request.resource.data.title is string
+                    && request.resource.data.body is string;
+      allow update: if request.auth != null
+                    && resource.data.ownerId == request.auth.uid
+                    && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+    }
   }
 }

@@ -25,7 +25,7 @@ function focusableElements(container: HTMLElement) {
 
 export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: ComposerProps) {
   const reducedMotion = useReducedMotion();
-  const { addDream, updateDream, savedDraft, saveLocalDraft, clearLocalDraft } = useDreamStore();
+  const { addDream, updateDream, savedDraft, saveLocalDraft, clearLocalDraft, cloud } = useDreamStore();
   const isEdit = mode === "edit" && Boolean(dream);
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const titleRef = React.useRef<HTMLInputElement>(null);
@@ -139,7 +139,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.25em] text-text-muted">{isEdit ? "Editar memoria" : "Registrar sueño"}</p>
               <h2 id="dream-composer-title" className="mt-3 font-display text-5xl leading-[.92] tracking-[-0.045em]">{isEdit ? "Volvamos a este momento." : "Guardemos uno."}</h2>
-              <p id="dream-composer-description" className="mt-3 max-w-md text-sm leading-6 text-text-secondary">Se conserva sólo en este navegador. No se comparte ni se envía a ningún servicio.</p>
+              <p id="dream-composer-description" className="mt-3 max-w-md text-sm leading-6 text-text-secondary">{cloud.status === "synced" ? "Se conserva en este navegador y en tu copia privada. Nunca se publica sin que lo decidas." : "Se conserva sólo en este navegador. No se comparte ni se envía a ningún servicio."}</p>
             </div>
             <button type="button" className="material-button grid h-11 w-11 shrink-0 place-items-center rounded-full" aria-label="Cerrar formulario" onClick={closeWithCare}>
               <X className="h-4 w-4" />
@@ -175,7 +175,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
               </div>
             </div>
           ) : null}
-          {isEdit ? <p className="mt-5 flex items-center gap-2 text-xs text-text-muted"><Check className="h-3.5 w-3.5" />Los cambios reemplazan sólo esta copia local.</p> : null}
+          {isEdit ? <p className="mt-5 flex items-center gap-2 text-xs text-text-muted"><Check className="h-3.5 w-3.5" />{cloud.status === "synced" ? "Los cambios actualizan tu copia privada." : "Los cambios reemplazan sólo esta copia local."}</p> : null}
         </motion.div>
       </motion.div>
     </AnimatePresence>

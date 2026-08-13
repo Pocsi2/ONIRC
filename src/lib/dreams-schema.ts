@@ -31,6 +31,7 @@ export function isDreamRecord(value: unknown): value is Dream {
     dream.body.trim().length > 0 &&
     typeof dream.hue === "string" &&
     hueSet.has(dream.hue) &&
+    (dream.visibility === undefined || dream.visibility === "private" || dream.visibility === "public") &&
     isTimestamp(dream.createdAt) &&
     isTimestamp(dream.updatedAt)
   );
@@ -60,6 +61,7 @@ function migrateDream(value: unknown): Dream | null {
     hue: typeof legacy.hue === "string" && hueSet.has(legacy.hue) ? legacy.hue as Dream["hue"] : hueForId(legacy.id),
     createdAt: isTimestamp(legacy.createdAt) ? legacy.createdAt : timestamp,
     updatedAt: isTimestamp(legacy.updatedAt) ? legacy.updatedAt : timestamp,
+    visibility: legacy.visibility === "public" || legacy.visibility === "private" ? legacy.visibility : undefined,
   };
 }
 

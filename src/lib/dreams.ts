@@ -1,6 +1,7 @@
 export const DREAM_HUES = ["cyan", "lavender", "blush", "mint", "champagne"] as const;
 
 export type DreamHue = (typeof DREAM_HUES)[number];
+export type DreamVisibility = "private" | "public";
 
 export type Dream = {
   id: string;
@@ -10,6 +11,7 @@ export type Dream = {
   hue: DreamHue;
   createdAt: string;
   updatedAt: string;
+  visibility?: DreamVisibility;
 };
 
 export type DreamDraft = Pick<Dream, "date" | "title" | "body">;

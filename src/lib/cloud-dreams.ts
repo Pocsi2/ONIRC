@@ -15,6 +15,32 @@ function dreamsCollection(userId: string) {
   return collection(firebaseDb, "users", userId, "dreams");
 }
 
+export type PublicDream = Pick<Dream, "date" | "title" | "body" | "hue" | "createdAt" | "updatedAt"> & {
+  id: string;
+  ownerId: string;
+  sourceDreamId: string;
+  publishedAt: string;
+};
+
+function publicDreamId(userId: string, dreamId: string) {
+  return `${userId}_${dreamId}`;
+}
+
+function toPublicDream(userId: string, dream: Dream): PublicDream {
+  return {
+    id: publicDreamId(userId, dream.id),
+    ownerId: userId,
+    sourceDreamId: dream.id,
+    date: dream.date,
+    title: dream.title,
+    body: dream.body,
+    hue: dream.hue,
+    createdAt: dream.createdAt,
+    updatedAt: dream.updatedAt,
+    publishedAt: new Date().toISOString(),
+  };
+}
+
 function sameDream(left: Dream, right: Dream) {
   return left.date === right.date && left.title === right.title && left.body === right.body && left.hue === right.hue && left.createdAt === right.createdAt && left.updatedAt === right.updatedAt;
 }
@@ -85,6 +111,16 @@ export function saveDreamToCloud(userId: string, dream: Dream) {
 export function deleteDreamFromCloud(userId: string, dreamId: string) {
   const batch = writeBatch(firebaseDb);
   batch.delete(doc(firebaseDb, "users", userId, "dreams", dreamId));
+  return batch.commit();
+}
+
+export function publishDreamToCloud(userId: string, dream: Dream) {
+  return setDoc(doc(firebaseDb, "publicDreams", publicDreamId(userId, dream.id)), toPublicDream(userId, dream));
+}
+
+export function removePublicDreamFromCloud(userId: string, dreamId: string) {
+  const batch = writeBatch(firebaseDb);
+  batch.delete(doc(firebaseDb, "publicDreams", publicDreamId(userId, dreamId)));
   return batch.commit();
 }
 
