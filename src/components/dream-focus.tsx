@@ -5,15 +5,18 @@ import { ArrowLeft, Globe2, LockKeyhole, Pencil, Trash2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { DreamPearl } from "@/components/dream-pearl";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { Dream } from "@/lib/dreams";
 import { formatDreamDate } from "@/lib/dreams";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
-export function DreamFocus({ dream, onBack, onEdit, onDelete, canShare, onPublish, onMakePrivate }: { dream: Dream; onBack: () => void; onEdit: () => void; onDelete: () => void; canShare: boolean; onPublish: () => void; onMakePrivate: () => void }) {
+export function DreamFocus({ dream, onBack, onEdit, onDelete, canShare, publicName, onPublish, onMakePrivate }: { dream: Dream; onBack: () => void; onEdit: () => void; onDelete: () => void; canShare: boolean; publicName?: string; onPublish: (publicName: string) => Promise<void>; onMakePrivate: () => void }) {
   const reducedMotion = useReducedMotion();
   const backRef = React.useRef<HTMLButtonElement>(null);
   const [confirming, setConfirming] = React.useState(false);
   const [confirmingPublic, setConfirmingPublic] = React.useState(false);
+  const [pseudonym, setPseudonym] = React.useState(publicName ?? "");
+  const [publicError, setPublicError] = React.useState("");
   const isPublic = dream.visibility === "public";
 
   React.useEffect(() => {
@@ -56,8 +59,12 @@ export function DreamFocus({ dream, onBack, onEdit, onDelete, canShare, onPublis
             {confirmingPublic ? (
               <div className="mt-6 rounded-[22px] border border-white/55 bg-white/48 p-4 text-sm leading-6 text-text-secondary [html[data-theme=night]_&]:border-white/10 [html[data-theme=night]_&]:bg-white/[.06]" role="alert">
                 <p>¿Hacer público “{dream.title}”? Crearemos una copia visible para cualquiera. Tu memoria original seguirá siendo privada y podrás retirarla cuando quieras.</p>
+                <label className="mt-4 block text-sm font-medium text-text-secondary">Tu seudónimo público
+                  <Input value={pseudonym} onChange={(event) => { setPseudonym(event.target.value); setPublicError(""); }} maxLength={32} placeholder="Por ejemplo, Marea quieta" className="mt-2" aria-describedby={publicError ? "pseudonym-error" : undefined} />
+                </label>
+                {publicError ? <p id="pseudonym-error" role="alert" className="mt-2 text-sm text-memory-accessible">{publicError}</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button variant="secondary" onClick={() => { onPublish(); setConfirmingPublic(false); }}><Globe2 className="h-4 w-4" />Compartir públicamente</Button>
+                  <Button variant="secondary" onClick={() => { if (pseudonym.trim().length < 2) { setPublicError("Elige un seudónimo de al menos dos caracteres."); return; } void onPublish(pseudonym).then(() => setConfirmingPublic(false)); }}><Globe2 className="h-4 w-4" />Compartir públicamente</Button>
                   <button type="button" className="min-h-10 px-3 text-sm" onClick={() => setConfirmingPublic(false)}>Mantener privado</button>
                 </div>
               </div>

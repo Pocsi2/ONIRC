@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CalendarDays, Sparkle } from "lucide-react";
+import { CalendarDays, Compass, Sparkle } from "lucide-react";
 import { Atmosphere } from "@/components/atmosphere";
 import { AuthControl } from "@/components/auth-control";
 import { ThemeControl } from "@/components/theme-control";
@@ -31,6 +31,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <ViewTransitionLink href="/calendar" className="material-button inline-flex min-h-11 items-center gap-2 rounded-[16px] px-3 text-sm" aria-label="Calendario">
                   <CalendarDays className="h-4 w-4" />
                   <span className="hidden sm:inline">Calendario</span>
+                </ViewTransitionLink>
+                <ViewTransitionLink href="/explorar" className="material-button inline-flex min-h-11 items-center gap-2 rounded-[16px] px-3 text-sm" aria-label="Explorar sueños públicos">
+                  <Compass className="h-4 w-4" />
+                  <span className="hidden md:inline">Explorar</span>
                 </ViewTransitionLink>
                 <AuthControl />
                 <ThemeControl />

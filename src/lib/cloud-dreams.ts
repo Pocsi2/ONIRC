@@ -1,8 +1,12 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
+  limit,
   onSnapshot,
+  orderBy,
+  query,
   setDoc,
   writeBatch,
   type Unsubscribe,
@@ -20,13 +24,20 @@ export type PublicDream = Pick<Dream, "date" | "title" | "body" | "hue" | "creat
   ownerId: string;
   sourceDreamId: string;
   publishedAt: string;
+  authorName: string;
 };
+
+function isPublicDreamRecord(value: unknown): value is PublicDream {
+  if (!value || typeof value !== "object") return false;
+  const dream = value as Partial<PublicDream>;
+  return typeof dream.id === "string" && typeof dream.ownerId === "string" && typeof dream.sourceDreamId === "string" && typeof dream.date === "string" && typeof dream.title === "string" && typeof dream.body === "string" && typeof dream.hue === "string" && typeof dream.createdAt === "string" && typeof dream.updatedAt === "string" && typeof dream.publishedAt === "string" && typeof dream.authorName === "string";
+}
 
 function publicDreamId(userId: string, dreamId: string) {
   return `${userId}_${dreamId}`;
 }
 
-function toPublicDream(userId: string, dream: Dream): PublicDream {
+function toPublicDream(userId: string, dream: Dream, authorName: string): PublicDream {
   return {
     id: publicDreamId(userId, dream.id),
     ownerId: userId,
@@ -38,6 +49,7 @@ function toPublicDream(userId: string, dream: Dream): PublicDream {
     createdAt: dream.createdAt,
     updatedAt: dream.updatedAt,
     publishedAt: new Date().toISOString(),
+    authorName,
   };
 }
 
@@ -114,8 +126,19 @@ export function deleteDreamFromCloud(userId: string, dreamId: string) {
   return batch.commit();
 }
 
-export function publishDreamToCloud(userId: string, dream: Dream) {
-  return setDoc(doc(firebaseDb, "publicDreams", publicDreamId(userId, dream.id)), toPublicDream(userId, dream));
+export function loadPublicName(userId: string) {
+  return getDoc(doc(firebaseDb, "users", userId)).then((snapshot) => {
+    const name = snapshot.data()?.publicName;
+    return typeof name === "string" ? name : "";
+  });
+}
+
+export function publishDreamToCloud(userId: string, dream: Dream, authorName: string) {
+  return setDoc(doc(firebaseDb, "publicDreams", publicDreamId(userId, dream.id)), toPublicDream(userId, dream, authorName));
+}
+
+export function savePublicName(userId: string, authorName: string) {
+  return setDoc(doc(firebaseDb, "users", userId), { publicName: authorName, updatedAt: new Date().toISOString() }, { merge: true });
 }
 
 export function removePublicDreamFromCloud(userId: string, dreamId: string) {
@@ -127,5 +150,12 @@ export function removePublicDreamFromCloud(userId: string, dreamId: string) {
 export function subscribeToCloudDreams(userId: string, onDreams: (dreams: Dream[]) => void, onError: (error: Error) => void): Unsubscribe {
   return onSnapshot(dreamsCollection(userId), (snapshot) => {
     onDreams(snapshot.docs.map((item) => item.data()).filter(isDreamRecord));
+  }, (error) => onError(error));
+}
+
+export function subscribeToPublicDreams(onDreams: (dreams: PublicDream[]) => void, onError: (error: Error) => void): Unsubscribe {
+  const publicQuery = query(collection(firebaseDb, "publicDreams"), orderBy("publishedAt", "desc"), limit(36));
+  return onSnapshot(publicQuery, (snapshot) => {
+    onDreams(snapshot.docs.map((item) => item.data()).filter(isPublicDreamRecord));
   }, (error) => onError(error));
 }

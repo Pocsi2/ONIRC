@@ -6,7 +6,9 @@ const projectRoot = dirname(fileURLToPath(import.meta.url));
 const isGitHubPagesBuild = process.env.GITHUB_ACTIONS === "true";
 
 const nextConfig: NextConfig = {
-  distDir: process.env.NEXT_DIST_DIR || ".next",
+  // Keeps Next's generated cache separate from OneDrive's occasionally locked
+  // default directory. It is ignored by Git and does not affect `out/`.
+  distDir: ".next-onirc",
   output: "export",
   trailingSlash: true,
   basePath: isGitHubPagesBuild ? "/ONIRC" : "",

@@ -225,7 +225,7 @@ export function DreamCalendar() {
         {!selectedDream && selectedCollection.length < 2 && !composeMode ? <div className="fixed bottom-5 right-4 z-surface sm:bottom-7 sm:right-7 lg:right-10"><CloudCurtain onOpen={() => openComposer()} emphasized={isCalendarEmpty} /></div> : null}
 
         <AnimatePresence>
-          {selectedDream && !composeMode ? <DreamFocus key={selectedDream.id} dream={selectedDream} onBack={closeFocus} onEdit={() => updateUrl({ compose: "edit" })} onDelete={() => handleDelete(selectedDream)} canShare={cloud.status === "synced"} onPublish={() => void publishDream(selectedDream.id)} onMakePrivate={() => void makeDreamPrivate(selectedDream.id)} /> : null}
+          {selectedDream && !composeMode ? <DreamFocus key={selectedDream.id} dream={selectedDream} onBack={closeFocus} onEdit={() => updateUrl({ compose: "edit" })} onDelete={() => handleDelete(selectedDream)} canShare={cloud.status === "synced"} publicName={cloud.publicName} onPublish={(publicName) => publishDream(selectedDream.id, publicName)} onMakePrivate={() => void makeDreamPrivate(selectedDream.id)} /> : null}
           {selectedCollection.length > 1 && !selectedDream && !composeMode ? <DreamCollection key={selectedCollectionDate} date={selectedCollectionDate!} dreams={selectedCollection} onBack={() => updateUrl({ collection: null })} onSelect={(dream) => updateUrl({ collection: null, dream: dream.id })} /> : null}
         </AnimatePresence>
         <AnimatePresence>
