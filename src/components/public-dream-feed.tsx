@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { CloudOff, Compass, Globe2, LoaderCircle } from "lucide-react";
+import { CloudOff, Compass, Globe2, LoaderCircle, ShieldCheck } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { DreamPearl } from "@/components/dream-pearl";
 import { PageTransition } from "@/components/motion/page-transition";
 import { formatDreamDate } from "@/lib/dreams";
-import { subscribeToPublicDreams, type PublicDream } from "@/lib/cloud-dreams";
+import type { PublicDream } from "@/lib/cloud-dreams";
+import { isPublicArchiveAvailable } from "@/lib/archive-state";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
 export function PublicDreamFeed() {
@@ -14,13 +15,51 @@ export function PublicDreamFeed() {
   const [status, setStatus] = React.useState<"loading" | "ready" | "error">("loading");
   const reducedMotion = useReducedMotion();
 
-  React.useEffect(() => subscribeToPublicDreams(
-    (nextDreams) => {
-      setDreams(nextDreams);
-      setStatus("ready");
-    },
-    () => setStatus("error"),
-  ), []);
+  React.useEffect(() => {
+    if (!isPublicArchiveAvailable) return;
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+
+    void import("@/lib/cloud-dreams")
+      .then(({ subscribeToPublicDreams }) => subscribeToPublicDreams(
+        (nextDreams) => {
+          if (!active) return;
+          setDreams(nextDreams);
+          setStatus("ready");
+        },
+        () => {
+          if (active) setStatus("error");
+        },
+      ))
+      .then((nextUnsubscribe) => {
+        if (active) unsubscribe = nextUnsubscribe;
+        else nextUnsubscribe();
+      })
+      .catch(() => {
+        if (active) setStatus("error");
+      });
+
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
+  }, []);
+
+  if (!isPublicArchiveAvailable) {
+    return (
+      <PageTransition className="pb-16">
+        <section className="mx-auto max-w-3xl pt-5 sm:pt-10">
+          <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.28em] text-text-muted"><Compass className="h-3.5 w-3.5" /> Archivo abierto</p>
+          <h1 className="mt-5 font-display text-balance text-[clamp(4.2rem,10vw,8.5rem)] leading-[.84] tracking-[-0.06em]">Todavía<br />guardamos silencio.</h1>
+          <div className="surface-opal mt-12 max-w-xl rounded-[32px] p-8 sm:p-10">
+            <ShieldCheck className="h-5 w-5 text-memory-accessible" aria-hidden="true" />
+            <p className="mt-5 font-display text-4xl leading-none">El archivo está en preparación.</p>
+            <p className="mt-4 text-sm leading-7 text-text-secondary">Estamos terminando una capa de privacidad para que una firma pública nunca revele la identidad ni el origen privado de quien comparte.</p>
+          </div>
+        </section>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition className="pb-16">
