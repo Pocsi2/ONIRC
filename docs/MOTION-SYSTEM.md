@@ -1,55 +1,59 @@
 # Onirc — Sistema de movimiento
 
 Fecha de revisión: 13 de agosto de 2026
-Alcance: diario local estático publicado con GitHub Pages.
+Alcance: Release Candidate «Archivo de luz»
 
 ## Principios
 
-| Principio | Uso en Onirc |
+| Principio | Aplicación en Onirc |
 | --- | --- |
-| Continuidad | La URL del calendario conserva mes, sueño y composición. Volver devuelve el foco a la perla de origen. |
-| Profundidad | La atmósfera se mueve apenas; el calendario permanece estable y una memoria aparece como plano Ópalo. |
-| Foco | Al seleccionar una perla, el paisaje temporal pierde prioridad sin desaparecer. |
-| Transformación | La perla comparte `layoutId` con la memoria enfocada. |
-| Feedback | Nube-cortina, botones, guardado, borrado y deshacer responden sin rebote ni espera. |
+| Continuidad | Mes, foco y composer viven en la URL del calendario. Volver devuelve el foco a la perla que originó la memoria. |
+| Profundidad | La atmósfera está detrás; el calendario es estable; Ópalo aparece sólo para una memoria o para escribir. |
+| Foco | Seleccionar una perla baja la prioridad del paisaje sin borrar el tiempo. |
+| Transformación | La perla comparte `layoutId` con la memoria enfocada y se convierte en su origen visual. |
+| Feedback | Los controles tienen respuesta material contenida; guardar y deshacer se anuncian sin celebración intrusiva. |
+
+Una animación debe servir al menos uno de estos principios. Si no comunica continuidad, profundidad, foco, transformación o feedback, no se añade.
 
 ## Tokens semánticos
 
 | Token | Valor | Uso |
 | --- | ---: | --- |
 | `--motion-instant` | 100 ms | Reduced motion y cambios esenciales |
-| `--motion-fast` | 180 ms | Presión, hover, foco de material |
-| `--motion-standard` | 340 ms | Controles y opacidad de contexto |
-| `--motion-expressive` | 560 ms | Lámina de registro |
+| `--motion-fast` | 180 ms | Presión, hover y foco de material |
+| `--motion-standard` | 340 ms | Controles y receso del contexto |
+| `--motion-expressive` | 560 ms | Lámima de escritura y revelaciones breves |
 | `--motion-dream` | 820 ms | Perla → Memoria y retorno |
-| `--motion-ambient-slow` | 24 s | Campo atmosférico |
-| `--motion-ambient-slower` | 34 s | Deriva ambiental secundaria |
+| `--motion-ambient-slow` | 36 s | Reserva para campos atmosféricos |
+| `--motion-ambient-slower` | 52 s | Deriva; con composición total de 64–72 s |
 
-Las curvas `soft-out`, `soft-in`, `dream` y `material` están centralizadas en `src/lib/motion/tokens.ts`. Se priorizan `transform` y `opacity`; no se anima tamaño, posición de layout, blur masivo ni sombras grandes de forma continua.
+Las curvas `soft-out`, `soft-in`, `dream` y `material`, así como los resortes contenidos, viven en `src/lib/motion/tokens.ts`. Se priorizan `transform` y `opacity`.
 
-## Secuencias aprobadas
+## Secuencia firma: Perla → Memoria
 
-### Perla → Memoria
+1. La perla recibe foco mediante botón, toque o teclado.
+2. El paisaje temporal pierde contraste y opacidad, pero mantiene el mes y la fecha visibles.
+3. La perla usa el mismo `layoutId` al entrar en la cámara de memoria.
+4. El título gana la jerarquía; fecha y narrativa llegan sin demoras decorativas.
+5. Al volver, se elimina `dream` de la URL y el foco retorna a la perla original.
 
-1. La perla recibe input de botón y foco accesible.
-2. El calendario reduce opacidad, conservando fecha y orientación.
-3. La perla se expande hacia la superficie Ópalo.
-4. Fecha, título y cuerpo se leen de inmediato.
-5. Volver elimina `dream` de la URL y restaura foco sobre la misma perla.
+La secuencia vive en `/calendar?month=…&dream=…`, de modo que también funciona para memorias creadas después del build estático.
 
-La secuencia vive dentro de `/calendar?month=…&dream=…`; esto permite continuidad con exportación estática, incluso para IDs creados después del build.
+## Escritura en memoria
 
-### Nube-cortina y conservación
-
-La nube desplaza su luz unos píxeles en hover/foco. En móvil la etiqueta permanece visible y un toque abre la composición. Guardar deposita la nueva perla en el mes correcto y muestra un mensaje breve; no hay confeti, modal de éxito ni bloqueo de lectura.
+El composer revela su orden natural: **narrar → fechar → nombrar**. No es una animación ornamental: evita clasificar antes de recordar. Guardar deposita la perla en el mes correcto y muestra una confirmación breve.
 
 ## Reduced motion
 
-Con `prefers-reduced-motion: reduce` se eliminan deriva ambiental, transformaciones grandes y recorridos espaciales. Se preservan opacidad, foco, estados seleccionados, feedback de guardado y navegación por teclado.
+Con `prefers-reduced-motion: reduce`:
+
+- se inmoviliza la atmósfera;
+- se eliminan paralaje, derivas y transformaciones espaciales grandes;
+- se conservan foco, jerarquía, visibilidad de estados, anuncios y navegación por teclado.
 
 ## Presupuesto de rendimiento
 
-- Dos gradientes ambientales animados como máximo; formas restantes inmóviles.
+- Máximo dos gradientes ambientales animados y ambos transform-only.
 - Sin partículas, video, WebGL, canvas ni animación por estado continuo de React.
-- `backdrop-filter` sólo sobre superficies elevadas pequeñas.
-- El calendario funciona sin View Transitions del navegador; Motion controla el fallback local.
+- Frost usa `backdrop-filter` sólo en controles compactos, navegación y feedback.
+- El calendario es una trama directa y silenciosa, no una capa de vidrio grande.

@@ -1,42 +1,28 @@
 # Onirc — Scorecard QA
 
-Fecha: 13 de agosto de 2026
-Release evaluado: diario local estático para GitHub Pages.
+Fecha: 14 de agosto de 2026
+Release: **Archivo de luz — Release Candidate**
 
-| Área evaluable en este release | Resultado | Evidencia |
-| --- | ---: | --- |
-| Dirección de arte y materiales | 8.3 / 10 | Revisión visual de portada y calendario; tokens Perla/Frost/Ópalo. |
-| Comprensión y flujo local | 8.2 / 10 | E2E: crear, abrir, editar, borrar, deshacer. |
-| Responsive y tacto | 8.0 / 10 | Proyectos E2E desktop y móvil; controles mínimos de 44 px. |
-| Accesibilidad | 8.7 / 10 | axe desktop/móvil sin violaciones; teclado y reduced motion cubiertos. |
-| Movimiento y continuidad | 8.3 / 10 | `layoutId` Perla → Memoria, retorno de foco, auditoría actualizada. |
-| Rendimiento y estabilidad | 8.2 / 10 | Exportación estática, sin API, sin imágenes pesadas, build y consola E2E limpios; Lighthouse CI alcanza 94 / 100 y 93 / 100 de rendimiento, con accesibilidad 100 / 100. |
-| Voz y contenido | 8.4 / 10 | Español, microcopy local claro, sin promesas de nube o cuenta. |
+## Evidencia de esta rama
 
-**Promedio del alcance estático:** 8.3 / 10.
+| Área | Estado | Evidencia |
+| --- | --- | --- |
+| Dirección de arte y materiales | Verificado | Sustracción de superficies: Perla para memoria, Frost para controles y Ópalo para foco. El calendario es una trama temporal, no tarjetas por fecha. |
+| Flujo local | Aprobado | Playwright: crear, edición, eliminación/deshacer, colección múltiple, escritura progresiva y retorno a la perla. 8/8 recorridos aprobados. |
+| Privacidad pública | Protegida / congelada | Reglas productivas bloquean escrituras públicas de navegador. Emulador cubre propietaria, visitante, segunda cuenta, proyección visible, fuga heredada y escritura directa: 4/4. |
+| Funciones confiables | Compilado; no desplegado | `functions/` pasa lint y compilación. Su despliegue requiere Blaze, WIF y aprobación del propietario. |
+| GitHub Pages | Pendiente de CI remoto | El build local produce `out/` con `/`, `/calendar/` y `/explorar/`. El workflow verifica artefacto y smoke test después del despliegue. |
+| Lint, tipos y unitarias | Aprobado | `npm run lint`, `npm run typecheck` y `npm run test`: 3 archivos / 7 pruebas. |
+| Reglas Firestore | Aprobado localmente | `npm run test:rules` con emulador Firestore y Temurin 21 portátil: 1 archivo / 4 pruebas. CI instala Java 21. |
+| Accesibilidad | Aprobado en regresión | axe no detecta violaciones críticas; etiquetas persistentes, semántica, foco de retorno, objetivos de 44 px y fallback reduced motion están cubiertos en E2E. |
+| Rendimiento | Aprobado | Lighthouse local: inicio 97, calendario 95, accesibilidad 100 en ambos. Firebase/Auth se difiere hasta sesión conocida o intención explícita. |
+| Responsive | Cobertura automatizada | Playwright ejecuta los recorridos en escritorio y móvil. La revisión visual final por matriz completa espera el SHA publicado. |
 
-No se asigna puntuación integral sobre el briefing de 100 puntos: autenticación, privacidad por usuario, visibilidad pública, moderación y exportación fueron diferidos deliberadamente y no se consideran cumplidos.
+## Gates de cierre restantes
 
-## Comandos aprobados
+1. Subir la rama, abrir PR y aprobar CI remoto sobre el SHA exacto.
+2. Hacer merge a `main` y confirmar Pages con smoke test de `/`, `/calendar/` y `/explorar/`.
+3. Revisar visualmente el sitio publicado en 320, 390, 768, 1366, 1440 y 1920 px, incluida la sesión real de Firebase.
+4. Mantener el archivo público congelado hasta que exista aprobación de Blaze, Workload Identity Federation, migración ensayada y auditoría de proyecciones.
 
-```text
-npm run lint
-npm run typecheck
-npm run build
-npm run test
-npm run test:e2e
-npm run qa:lighthouse
-```
-
-## Evidencia E2E
-
-- Desktop y móvil: crear → abrir → editar → eliminar → deshacer.
-- Desktop y móvil: varias memorias en una fecha → colección finita → retorno al calendario.
-- Desktop y móvil: `prefers-reduced-motion: reduce` y análisis axe sin violaciones.
-- El servidor E2E sirve `out/`, la misma exportación que consumirá GitHub Pages.
-
-## Evidencia Lighthouse CI
-
-- Portada: rendimiento 94 / 100, accesibilidad 100 / 100 en la medición móvil local.
-- Calendario: rendimiento 93 / 100, accesibilidad 100 / 100 en la medición móvil local.
-- Los reportes se guardan localmente en `artifacts/lighthouse/` y no se publican ni contienen memorias del usuario.
+No se adjudica todavía una candidatura de premio: la release candidate necesita la evidencia del despliegue real y la revisión humana final.
