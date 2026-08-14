@@ -1,6 +1,7 @@
 name: Deploy Onirc to GitHub Pages
 
 on:
+  pull_request:
   push:
     branches: [main]
   workflow_dispatch:
@@ -15,20 +16,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  quality:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
+
+      - name: Set up Java for the Firestore emulator
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
 
       - name: Install dependencies
         run: npm ci
@@ -37,15 +41,87 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
+          npm run test
+          npm run test:rules
 
-      - name: Build static site
+      - name: Validate trusted Functions
+        run: |
+          npm ci --prefix functions
+          npm run functions:lint
+          npm run functions:build
+
+      - name: Install browser for end-to-end checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate local static experience
+        run: npm run test:e2e
+
+  build:
+    needs: quality
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-ready: ${{ steps.static-output.outputs.ready }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build GitHub Pages site
+        env:
+          ONIRC_BASE_PATH: /ONIRC
+          # Empty or any value other than "available" safely keeps the archive hidden.
+          NEXT_PUBLIC_PUBLIC_ARCHIVE_STATE: ${{ vars.ONIRC_PUBLIC_ARCHIVE_STATE }}
         run: npm run build
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./out
+      - name: Verify static output
+        id: static-output
+        run: |
+          test -d out
+          test -f out/index.html
+          test -f out/calendar/index.html
+          test -f out/explorar/index.html
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && needs.build.outputs.artifact-ready == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    outputs:
+      page-url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  smoke:
+    needs: deploy
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify deployed routes
+        env:
+          PAGE_URL: ${{ needs.deploy.outputs.page-url }}
+        run: |
+          for path in "" "calendar/" "explorar/"; do
+            curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "${PAGE_URL}${path}"
+          done
