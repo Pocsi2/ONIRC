@@ -12,10 +12,11 @@ async function startWithEmptyCalendar(page: import("@playwright/test").Page) {
 
 async function recordDream(page: import("@playwright/test").Page, title: string, body: string) {
   await page.getByRole("button", { name: "Registrar sueño" }).click();
-  await page.getByLabel("Título del sueño").fill(title);
-  await page.getByLabel("¿Qué recuerdas?").fill(body);
-  await page.getByRole("button", { name: "Registrar sueño" }).click();
-  await expect(page.getByText(/ya vive en tu calendario/)).toBeVisible();
+  await page.locator("#dream-body").fill(body);
+  await page.locator("#dream-title").fill(title);
+  await page.getByRole("button", { name: "Guardar en el tiempo" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator('[role="status"]').filter({ hasText: title })).toContainText("ya vive en tu calendario");
 }
 
 test("permite conservar, abrir, editar y deshacer la eliminación de un sueño local", async ({ page }) => {
@@ -26,7 +27,7 @@ test("permite conservar, abrir, editar y deshacer la eliminación de un sueño l
   await page.getByRole("button", { name: /Abrir sueño: El jardín blanco/ }).click();
   await expect(page.getByRole("heading", { name: "El jardín blanco" })).toBeVisible();
   await page.getByRole("button", { name: "Editar" }).click();
-  await page.getByLabel("Título del sueño").fill("El jardín de porcelana");
+  await page.locator("#dream-title").fill("El jardín de porcelana");
   await page.getByRole("button", { name: "Conservar cambios" }).click();
   await expect(page.getByText(/El jardín de porcelana.*ya vive en tu calendario/)).toBeVisible();
   await page.getByRole("button", { name: /Abrir sueño: El jardín de porcelana/ }).click();
@@ -57,4 +58,21 @@ test("mantiene la experiencia legible con reduced motion y sin errores de accesi
   await expect(page.getByRole("dialog")).toBeVisible();
   const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
   expect(accessibilityScanResults.violations).toEqual([]);
+});
+
+test("escribe antes de clasificar y conserva el punto de origen al volver", async ({ page }) => {
+  await startWithEmptyCalendar(page);
+  await page.getByRole("button", { name: "Registrar sueño" }).click();
+  await expect(page.locator("#dream-body")).toBeFocused();
+  await expect(page.locator("#dream-title")).toHaveCount(0);
+  await page.locator("#dream-body").fill("Una escalera de sal llevaba hacia una ciudad silenciosa y brillante.");
+  await expect(page.locator("#dream-date")).toBeVisible();
+  await expect(page.locator("#dream-title")).toBeVisible();
+  await page.locator("#dream-title").fill("Escalera de sal");
+  await page.getByRole("button", { name: "Guardar en el tiempo" }).click();
+  const pearl = page.getByRole("button", { name: /Abrir sueño: Escalera de sal/ });
+  await pearl.click();
+  await expect(page).toHaveURL(/dream=/);
+  await page.getByRole("button", { name: "Volver al tiempo" }).click();
+  await expect(pearl).toBeFocused();
 });
