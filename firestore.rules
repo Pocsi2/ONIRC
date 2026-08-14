@@ -12,24 +12,25 @@ service cloud.firestore {
       match /dreams/{dreamId} {
         allow read, create, update, delete: if owns(userId);
       }
+
+      // Server-managed references prove ownership without placing a UID or a
+      // source-memory identifier in a document read by the public.
+      match /publicationLinks/{dreamId} {
+        allow read: if owns(userId);
+        allow write: if false;
+      }
     }
 
-    // A published dream is a deliberate, separate copy. Private memories never
-    // become readable merely by changing a field in the user's private path.
+    // Browser clients can only read visible, server-created projections. The
+    // Admin SDK used by Functions bypasses these rules by design.
     match /publicDreams/{publicDreamId} {
-      allow read: if true;
-      allow create: if request.auth != null
-                    && request.resource.data.ownerId == request.auth.uid
-                    && request.resource.data.keys().hasOnly(['id', 'ownerId', 'sourceDreamId', 'date', 'title', 'body', 'hue', 'createdAt', 'updatedAt', 'publishedAt', 'authorName'])
-                    && request.resource.data.title is string
-                    && request.resource.data.body is string
-                    && request.resource.data.authorName is string
-                    && request.resource.data.authorName.size() >= 2
-                    && request.resource.data.authorName.size() <= 32;
-      allow update: if request.auth != null
-                    && resource.data.ownerId == request.auth.uid
-                    && request.resource.data.ownerId == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow read: if resource.data.visibility == "visible";
+      allow write: if false;
+    }
+
+    // Reports contain private reporter metadata and are never client-readable.
+    match /moderationReports/{reportId} {
+      allow read, write: if false;
     }
   }
 }

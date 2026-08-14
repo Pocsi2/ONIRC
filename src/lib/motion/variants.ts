@@ -47,16 +47,17 @@ export const dreamReveal: Variants = {
 
 export const pearlMotion = {
   rest: { scale: 1 },
-  hover: { scale: 1.08 },
-  focus: { scale: 1.1 },
-  selected: { scale: 1.14 },
-  tap: { scale: 0.98 },
+  hover: { scale: 1.055 },
+  focus: { scale: 1.08 },
+  selected: { scale: 1.11 },
+  tap: { scale: 0.985 },
 } satisfies Variants;
 
 export const calendarRecede: Variants = {
   rest: { opacity: 1 },
   receded: {
-    opacity: 0.55,
+    opacity: 0.4,
+    scale: 0.995,
     transition: transitions.standard,
   },
 };

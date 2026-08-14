@@ -26,7 +26,7 @@ export function DreamPearl({
   transitionName,
   className,
 }: {
-  dream: Dream;
+  dream: Pick<Dream, "hue">;
   size?: "sm" | "md" | "lg" | "xl";
   selected?: boolean;
   focused?: boolean;
@@ -58,10 +58,10 @@ export function DreamPearl({
       transition={interactive && !reducedMotion ? motionSprings.pearl : reducedMotion ? reducedTransition : transitions.dream}
       className={cn("relative inline-grid shrink-0 place-items-center rounded-full will-change-transform", dimensions, (selected || focused) && "z-focus", className)}
     >
-      <span className={cn("absolute inset-[-125%] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.72),rgba(221,242,239,.28)_35%,transparent_68%)] opacity-55 blur-md", multiple && "inset-[-155%] opacity-68", (selected || focused) && "opacity-100 blur-xl")} />
-      <span className={cn("absolute inset-0 rounded-full bg-gradient-to-br shadow-[inset_0_1px_1px_rgba(255,255,255,.95),0_4px_18px_rgba(150,145,139,.16)]", hueClass[dream.hue])} />
-      <span className="absolute left-[24%] top-[18%] h-[24%] w-[32%] rounded-full bg-white/90 blur-[1px]" />
-      {multiple ? <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-memory-electric shadow-[0_0_12px_rgba(255,45,79,.4)]" aria-hidden="true" /> : null}
+      <span className={cn("absolute inset-[-65%] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.6),rgba(221,242,239,.17)_38%,transparent_70%)] opacity-30 blur-md", multiple && "inset-[-82%] opacity-42", (selected || focused) && "opacity-75 blur-lg")} />
+      <span className={cn("absolute inset-0 rounded-full bg-gradient-to-br shadow-[inset_0_1px_1px_rgba(255,255,255,.96),0_3px_13px_rgba(105,98,92,.14)]", hueClass[dream.hue])} />
+      <span className="absolute left-[24%] top-[18%] h-[23%] w-[31%] rounded-full bg-white/88 blur-[1px]" />
+      {multiple ? <span className="absolute -inset-1.5 rounded-full border border-white/65 [html[data-theme=night]_&]:border-white/20" aria-hidden="true" /> : null}
     </motion.span>
   );
 }

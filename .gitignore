@@ -3,7 +3,12 @@
 .next-lighthouse/
 .next-onirc/
 out/
+.onirc-build-quarantine-*/
 node_modules/
+functions/lib/
+functions/node_modules/
+gha-creds-*.json
+firestore-debug.log
 tsconfig.tsbuildinfo
 next-dev.log
 next-dev.err.log

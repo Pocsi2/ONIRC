@@ -1,22 +1,34 @@
 # Onirc — Auditoría de movimiento
 
 Fecha: 13 de agosto de 2026
-Veredicto global: conservar. El movimiento se redujo para servir contexto, no ornamento.
+Estado: Release Candidate «Archivo de luz»
 
-| Interacción | Función | Propiedades | Token | Input / fallback | Veredicto |
+## Veredicto
+
+El movimiento se conserva sólo cuando mantiene contexto, dirige la atención o confirma una consecuencia. La superficie visual se redujo: el calendario ya no utiliza tarjetas animadas por día y la atmósfera usa sólo dos desplazamientos lentos, basados en `transform`.
+
+| Interacción | Principio | Propiedades | Token | Fallback | Veredicto |
 | --- | --- | --- | --- | --- | --- |
-| Atmósfera | Profundidad | `transform`, opacidad | ambiental 24–49 s | Pasiva; se inmoviliza con reduced motion | Conservar, baja densidad |
-| Botón material | Feedback | `transform`, fondo, sombra breve | fast | Ratón, toque y teclado; estado inmediato reducido | Conservar |
-| Nube-cortina | Transformación | `transform` de luz | expressive | Botón de 44 px; etiqueta visible en móvil; opacidad reducida | Conservar |
-| Cambio de mes | Continuidad | estado/URL, opacidad | standard | Botones etiquetados; sin movimiento amplio reducido | Conservar |
-| Perla hover/foco | Foco | `scale`, opacidad | spring contenido / fast | Toque abre directamente; foco visible | Conservar |
-| Perla → Memoria | Continuidad, foco, transformación | `layoutId`, `transform`, opacidad | dream | Botón/teclado; crossfade corto reducido | Prioridad máxima |
-| Composición | Profundidad, feedback | opacidad, `transform` corto | expressive | Diálogo con foco atrapado; instantáneo reducido | Conservar |
-| Guardar / deshacer | Feedback | opacidad, `translateY` corto | standard | `role=status`; contenido disponible sin animación | Conservar |
+| Atmósfera | Profundidad | `transform`, opacidad | 64–72 s efectivos | Inmóvil con reduced motion | Conservar, apenas perceptible |
+| Navegación/material | Feedback | `transform`, color, sombra breve | fast | Estado de foco visible | Conservar |
+| Nube-cortina | Transformación | pequeña traslación de luz | expressive | Etiqueta siempre visible y toque directo | Conservar |
+| Cambio de mes | Continuidad | URL y estado; sin recorrido espacial | standard | Inmediato con reduced motion | Conservar |
+| Perla | Foco | `scale`, opacidad | spring contenido | Foco visible y activación por teclado | Conservar |
+| Perla → Memoria | Continuidad, foco, transformación | `layoutId`, `transform`, opacidad | dream | Crossfade breve | Prioridad máxima |
+| Composer | Profundidad, transformación | opacidad, traslación corta | expressive | Sin traslación amplia | Conservar |
+| Guardar / deshacer | Feedback | opacidad, `translateY` corto | standard | Anuncio de estado | Conservar |
+
+## Hallazgos y correcciones
+
+- **Movimiento ambiental:** la implementación anterior tenía tres masas y recorridos demasiado reconocibles. Ahora hay dos capas con composición de 64–72 segundos y baja opacidad.
+- **Calendario:** cada fecha tenía una superficie propia; eso convertía un paisaje temporal en un conjunto de controles. Las fechas son ahora una trama de líneas silenciosas; la perla es la única presencia física.
+- **Material:** Frost se reserva para navegación, controles y feedback. Ópalo aparece sólo al enfocar una memoria o al escribir. Perla sirve a la acción primaria.
+- **Transición:** el detalle sigue en `/calendar?month=…&dream=…`. El origen se preserva, el fondo recede y el foco vuelve a la perla al cerrar.
 
 ## Riesgos revisados
 
-- No quedan partículas ni fondos de video.
-- Las grandes áreas con blur son estáticas; la deriva sólo aplica `transform` a formas ambientales.
-- La transición no depende de View Transition API ni de rutas dinámicas.
-- Se validó reduced motion en E2E desktop y móvil.
+- No hay partículas, video, WebGL, canvas, animación por scroll ni actualizaciones continuas de React.
+- No se anima `filter`, `blur`, tamaño de layout ni sombras grandes de forma continua.
+- `backdrop-filter` se limita a superficies pequeñas; el calendario funciona sobre el lienzo sin blur.
+- El detalle no es una ruta dinámica ni depende de View Transition API; funciona en la exportación estática.
+- La validación funcional manual confirmó crear → abrir → volver y restauración del foco de origen.

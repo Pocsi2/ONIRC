@@ -1,8 +1,8 @@
 # Onirc — Briefing de producto, diseño y calidad
 
-**Versión:** 3.1 — dirección de arte para una experiencia de premio
+**Versión:** 3.2 — Release Candidate «Archivo de luz»
 **Fecha:** 13 de agosto de 2026  
-**Estado:** fuente de verdad operativa  
+**Estado:** fuente de verdad operativa; archivo público congelado hasta completar despliegue confiable
 **Producto publicado:** [pocsi2.github.io/ONIRC](https://pocsi2.github.io/ONIRC/)
 
 ---
@@ -39,9 +39,9 @@ La experiencia debe comunicar luz, espacio, materia, profundidad y movimiento co
 | Tema | Implementado | Sistema / Día / Noche cálida, persistido localmente. |
 | Firebase Auth | Implementado | Google y correo/contraseña. |
 | Sincronización privada | Implementado | Activación explícita; Firestore por `uid`, con unión que evita pérdida silenciosa. |
-| Publicar | Implementado | Confirmación y seudónimo; crea copia en `publicDreams`. |
-| Feed público | Implementado | `/explorar`, galería reciente de publicaciones públicas con seudónimo. |
-| Retirar publicación | Implementado | “Hacer privado” borra la copia pública y conserva la privada. |
+| Publicar | Congelado | La interfaz permanece oculta mientras se migra a una Function confiable sin IDs internos públicos. |
+| Feed público | Congelado | `/explorar` existe como estado de preparación; no consulta ni muestra memorias públicas. |
+| Retirar publicación | Pendiente de Function | `unpublishDream()` está implementada y compilada, pendiente de despliegue protegido. |
 | Perfiles públicos | Diferido | No hay páginas de perfil, seguidores ni mensajes. |
 | Comentarios, likes, reportes | Diferido | No deben añadirse sin moderación, bloqueo y política de abuso. |
 | Exportación / importación | Diferido | No se muestra como disponible. |
@@ -64,13 +64,10 @@ La experiencia debe comunicar luz, espacio, materia, profundidad y movimiento co
 - Nube-cortina: abre “Registrar sueño”.
 - Detalle, editor y colección viven en el estado URL: `month`, `dream`, `collection`, `compose`, `date`.
 
-### Espacio público `/explorar`
+### Espacio público `/explorar` (congelado)
 
-- Galería editorial, no red social de rendimiento.
-- Sólo presenta publicaciones que una persona eligió compartir.
-- Cada pieza incluye Perla, fecha, título, narrativa y “por {seudónimo}”.
-- Sin contadores, comentarios, ranking, nombre real, email ni identificación de cuenta en la interfaz.
-- Estado diseñado para carga, vacío y error.
+- Mientras se completa la migración, comunica de forma explícita que el archivo está en preparación y no carga datos públicos.
+- Tras la migración, será una galería editorial sin métricas ni perfiles; cada pieza incluirá Perla, fecha, título, narrativa y firma seudónima.
 
 ### Cuenta y nube
 
@@ -86,30 +83,30 @@ La experiencia debe comunicar luz, espacio, materia, profundidad y movimiento co
 | --- | --- | --- |
 | Local | `localStorage` del navegador | Sólo quien usa ese navegador. |
 | Privada sincronizada | `users/{uid}/dreams/{dreamId}` | Sólo el `uid` propietario. |
-| Publicada | Copia privada + `publicDreams/{uid}_{dreamId}` | Cualquier visitante del feed público. |
+| Publicada (futura) | Copia privada + proyección opaca `publicDreams/{publicId}` | Cualquier visitante, sólo después de publicar deliberadamente. |
 
-### Flujo “Hacerlo público”
+### Flujo “Hacerlo público” (pendiente de despliegue confiable)
 
 1. Abrir una memoria privada sincronizada.
 2. Elegir **Hacerlo público**.
 3. Leer el alcance: la copia será visible a cualquiera y la original seguirá privada.
 4. Elegir un seudónimo de 2 a 32 caracteres.
 5. Confirmar **Compartir públicamente**.
-6. Crear la copia pública; mostrarla en `/explorar`.
+6. Una Function autenticada crea una proyección segura con ID opaco; sólo entonces se muestra en `/explorar`.
 
 El seudónimo se guarda sólo en el documento privado del usuario para reutilizarlo. Cambiarlo en una publicación futura no modifica retroactivamente publicaciones anteriores: ese comportamiento sólo puede añadirse con una decisión explícita de producto.
 
 ### Reglas de Firestore
 
 - `users/{userId}` y su subcolección `dreams` sólo permiten lectura/escritura al propietario autenticado.
-- `publicDreams` permite lectura pública.
-- Crear, actualizar o eliminar una publicación exige que `ownerId` coincida con `request.auth.uid`.
-- La creación valida los campos públicos permitidos y el tamaño del seudónimo.
+- `publicDreams` sólo permite leer documentos seguros con `visibility == "visible"`; los documentos heredados quedan denegados.
+- El navegador no puede crear, actualizar ni eliminar publicaciones. Sólo una Function autenticada puede hacerlo con Admin SDK.
+- La proyección pública nunca incluye `ownerId`, `sourceDreamId`, UID, correo ni rutas internas.
 - El archivo versionado es [`firestore.rules`](../firestore.rules); las reglas activas de Firebase deben mantenerse idénticas.
 
 ### Riesgo pendiente — obligatorio antes de promoción pública
 
-La proyección actual de `publicDreams` conserva `ownerId` y `sourceDreamId` para aplicar autorización. Aunque no se muestran en la UI, Firestore los entrega a cualquier lector público. Antes de una promoción amplia se debe migrar a una arquitectura que no exponga identificadores internos al cliente público (por ejemplo, una colección de publicación con propietario opaco y reglas/función de servidor apropiadas). No declarar “anonimato técnico” hasta completar esa migración.
+La congelación está aplicada y la nueva arquitectura está implementada, pero Functions no se ha desplegado aún. El despliegue requiere Blaze, Workload Identity Federation, un environment protegido y una migración administrativa ensayada. Hasta entonces no declarar archivo abierto ni habilitar `ONIRC_PUBLIC_ARCHIVE_STATE=available`. El procedimiento completo vive en [`FIREBASE-RELEASE-RUNBOOK.md`](FIREBASE-RELEASE-RUNBOOK.md).
 
 ## 5. Dirección de arte — Archivo de luz
 

@@ -3,15 +3,15 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 
 const projectRoot = dirname(fileURLToPath(import.meta.url));
-const isGitHubPagesBuild = process.env.GITHUB_ACTIONS === "true";
+// A GitHub Action also runs unit and end-to-end checks. Only the deployment
+// build needs the repository subpath; coupling this to GITHUB_ACTIONS made
+// local checks behave like the deployed site and obscured release failures.
+const pagesBasePath = process.env.ONIRC_BASE_PATH === "/ONIRC" ? "/ONIRC" : "";
 
 const nextConfig: NextConfig = {
-  // Keeps Next's generated cache separate from OneDrive's occasionally locked
-  // default directory. It is ignored by Git and does not affect `out/`.
-  distDir: ".next-onirc",
   output: "export",
   trailingSlash: true,
-  basePath: isGitHubPagesBuild ? "/ONIRC" : "",
+  basePath: pagesBasePath,
   images: { unoptimized: true },
   turbopack: { root: projectRoot },
 };

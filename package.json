@@ -6,12 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src tests next.config.ts playwright.config.ts vitest.config.mts tailwind.config.ts",
+    "lint": "eslint src tests next.config.ts playwright.config.ts vitest.config.mts vitest.rules.config.mts tailwind.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:rules": "firebase emulators:exec --only firestore --project onirc-rules-test \"vitest run --config vitest.rules.config.mts\"",
     "test:e2e": "npm run build && playwright test",
-    "test:qa": "npm run lint && npm run typecheck && npm run test && npm run test:e2e",
-    "qa:lighthouse": "node scripts/run-lighthouse.mjs"
+    "test:qa": "npm run lint && npm run typecheck && npm run test && npm run test:rules && npm run test:e2e",
+    "qa:lighthouse": "node scripts/run-lighthouse.mjs",
+    "functions:build": "npm run build --prefix functions",
+    "functions:lint": "npm run lint --prefix functions"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
@@ -20,7 +23,7 @@
     "firebase": "^12.17.1",
     "lucide-react": "^0.468.0",
     "motion": "^12.0.0",
-    "next": "latest",
+    "next": "16.3.0",
     "react": "latest",
     "react-dom": "latest",
     "tailwind-merge": "^2.6.0"
@@ -28,6 +31,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@eslint/eslintrc": "^3.3.1",
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.10.2",
@@ -36,10 +40,14 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",
     "eslint-config-next": "latest",
+    "firebase-tools": "^15.27.0",
     "postcss": "^8.4.49",
     "serve": "^14.2.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
     "vitest": "^4.1.10"
+  },
+  "overrides": {
+    "nanoid": "3.3.18"
   }
 }
