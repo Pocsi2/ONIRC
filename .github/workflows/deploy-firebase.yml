@@ -1,0 +1,58 @@
+name: Deploy Onirc Firebase
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Qué configuración protegida deseas desplegar"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - rules
+          - functions
+          - all
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: firebase-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Authenticate with short-lived Google credentials
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: onirc-production
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+
+      - name: Install and validate Functions
+        run: |
+          npm ci --prefix functions
+          npm run functions:lint
+          npm run functions:build
+
+      - name: Deploy selected Firebase surface
+        env:
+          DEPLOY_TARGET: ${{ inputs.target }}
+        run: |
+          if [ "$DEPLOY_TARGET" = "rules" ]; then
+            npx firebase-tools@15.26.0 deploy --project onirc-production --only firestore:rules,firestore:indexes --non-interactive
+          elif [ "$DEPLOY_TARGET" = "functions" ]; then
+            npx firebase-tools@15.26.0 deploy --project onirc-production --only functions --non-interactive
+          else
+            npx firebase-tools@15.26.0 deploy --project onirc-production --only firestore:rules,firestore:indexes,functions --non-interactive
+          fi

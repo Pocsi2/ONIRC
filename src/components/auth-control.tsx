@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import {
   createAccountWithEmail,
+  prepareAuthSession,
   signInWithEmail,
   signInWithGoogle,
   signOutOfOnirc,
@@ -24,7 +25,7 @@ function friendlyAuthError(error: unknown) {
 }
 
 export function AuthControl() {
-  const { ready, user } = useAuthSession();
+  const { user } = useAuthSession();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
   const [email, setEmail] = useState("");
@@ -38,6 +39,11 @@ export function AuthControl() {
       setOpen(false);
       setError(null);
     }
+  };
+
+  const openAccess = () => {
+    setOpen(true);
+    void prepareAuthSession();
   };
 
   const useGoogle = async () => {
@@ -93,7 +99,7 @@ export function AuthControl() {
 
   return (
     <>
-      <Button variant="secondary" size="sm" className="min-h-11 rounded-[16px] px-3" onClick={() => setOpen(true)} disabled={!ready}>
+      <Button variant="secondary" size="sm" className="min-h-11 rounded-[16px] px-3" onClick={openAccess} aria-label="Ingresar a tu cuenta">
         <LogIn className="h-4 w-4" />
         <span className="hidden sm:inline">Ingresar</span>
       </Button>
