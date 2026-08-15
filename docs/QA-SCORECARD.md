@@ -3,26 +3,27 @@
 Fecha: 14 de agosto de 2026
 Release: **Archivo de luz — Release Candidate**
 
-## Evidencia de esta rama
+## Evidencia de la rama
 
 | Área | Estado | Evidencia |
 | --- | --- | --- |
-| Dirección de arte y materiales | Verificado | Sustracción de superficies: Perla para memoria, Frost para controles y Ópalo para foco. El calendario es una trama temporal, no tarjetas por fecha. |
-| Flujo local | Aprobado | Playwright: crear, edición, eliminación/deshacer, colección múltiple, escritura progresiva y retorno a la perla. 8/8 recorridos aprobados. |
-| Privacidad pública | Protegida / congelada | Reglas productivas bloquean escrituras públicas de navegador. Emulador cubre propietaria, visitante, segunda cuenta, proyección visible, fuga heredada y escritura directa: 4/4. |
-| Funciones confiables | Compilado; no desplegado | `functions/` pasa lint y compilación. Su despliegue requiere Blaze, WIF y aprobación del propietario. |
-| GitHub Pages | Pendiente de CI remoto | El build local produce `out/` con `/`, `/calendar/` y `/explorar/`. El workflow verifica artefacto y smoke test después del despliegue. |
-| Lint, tipos y unitarias | Aprobado | `npm run lint`, `npm run typecheck` y `npm run test`: 3 archivos / 7 pruebas. |
-| Reglas Firestore | Aprobado localmente | `npm run test:rules` con emulador Firestore y Temurin 21 portátil: 1 archivo / 4 pruebas. CI instala Java 21. |
-| Accesibilidad | Aprobado en regresión | axe no detecta violaciones críticas; etiquetas persistentes, semántica, foco de retorno, objetivos de 44 px y fallback reduced motion están cubiertos en E2E. |
-| Rendimiento | Aprobado | Lighthouse local: inicio 97, calendario 95, accesibilidad 100 en ambos. Firebase/Auth se difiere hasta sesión conocida o intención explícita. |
-| Responsive | Cobertura automatizada | Playwright ejecuta los recorridos en escritorio y móvil. La revisión visual final por matriz completa espera el SHA publicado. |
+| Dirección de arte y materiales | Verificado | Perla para memoria, Frost para herramientas y Ópalo para foco; el calendario conserva una trama temporal sin tarjetas por día. |
+| Flujo personal | Aprobado en regresión | Playwright cubre crear, editar, borrar/deshacer, colección múltiple, escritura progresiva y retorno a la Perla. |
+| Frontera Firestore | Aprobada localmente | El emulador cubre propietario, visitante, segunda cuenta, proyección heredada y toda lectura/escritura pública directa. |
+| Worker confiable | Aprobado localmente; pendiente de despliegue | Typecheck, lint y tres pruebas de frontera cubren health, token requerido y CORS limitado. |
+| Contrato de publicación | Aprobado localmente | Pruebas de esquema verifican proyección v2 exacta, rechazo de ownerId, sourceDreamId, campos desconocidos y fechas imposibles. |
+| GitHub Pages | Verificado en main; pendiente de SHA de esta rama | Build estático y workflow validan inicio, calendar y explorar antes del artefacto. |
+| Lint, tipos y unitarias | En validación de cierre | El gate exige lint, typecheck, worker:check y pruebas unitarias antes de PR. |
+| Accesibilidad | Aprobada en regresión previa | axe, etiquetas persistentes, foco de retorno, objetivos de 44 px y reduced motion se cubren en E2E. |
+| Rendimiento | Aprobado en regresión previa | La carga anónima difiere Firebase; el Worker concentra sólo acciones de archivo y una lectura editorial limitada. |
 
-## Gates de cierre restantes
+## Gates de activación que aún requieren estado externo
 
-1. Subir la rama, abrir PR y aprobar CI remoto sobre el SHA exacto.
-2. Hacer merge a `main` y confirmar Pages con smoke test de `/`, `/calendar/` y `/explorar/`.
-3. Revisar visualmente el sitio publicado en 320, 390, 768, 1366, 1440 y 1920 px, incluida la sesión real de Firebase.
-4. Mantener el archivo público congelado hasta que exista aprobación de Blaze, Workload Identity Federation, migración ensayada y auditoría de proyecciones.
+1. Crear el Worker Free y sus secretos en Cloudflare.
+2. Configurar los environments protegidos firebase-production y cloudflare-archive-production.
+3. Desplegar reglas, Worker y retirar por completo las proyecciones heredadas.
+4. Validar publicar, retirar, reporte y feed con cuentas reales en la URL de Pages.
+5. Añadir las variables de Pages sólo después de esa validación.
+6. Revisar visualmente el SHA publicado en 320, 390, 768, 1366, 1440 y 1920 px.
 
-No se adjudica todavía una candidatura de premio: la release candidate necesita la evidencia del despliegue real y la revisión humana final.
+No se declara aún una candidatura de premio ni un archivo público activo: faltan la evidencia de despliegue real y la revisión humana final.

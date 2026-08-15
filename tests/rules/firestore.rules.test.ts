@@ -35,7 +35,7 @@ async function seed() {
     await setDoc(doc(admin, "publicDreams", "opaque-public-id"), {
       id: "opaque-public-id",
       visibility: "visible",
-      schemaVersion: 1,
+      schemaVersion: 2,
       date: "2026-08-13",
       title: "Fragmento compartido",
       body: "Una proyección pública no contiene identificadores internos de la memoria.",
@@ -43,11 +43,20 @@ async function seed() {
       authorName: "Marea quieta",
       publishedAt: "2026-08-13T12:00:00.000Z",
     });
-    // Legacy documents may exist until migration. They never satisfy the read rule.
+    // Legacy documents may exist until retirement. Even with the visible flag,
+    // their extra internal fields mean they never satisfy the read rule.
     await setDoc(doc(admin, "publicDreams", "legacy-leak"), {
+      id: "legacy-leak",
+      visibility: "visible",
+      schemaVersion: 2,
+      date: "2026-08-13",
       ownerId: "owner-a",
       sourceDreamId: "private-dream",
       title: "Nunca legible",
+      body: "Una proyección heredada no puede exponer referencias privadas.",
+      hue: "lavender",
+      authorName: "Nombre antiguo",
+      publishedAt: "2026-08-13T12:00:00.000Z",
     });
   });
 }
@@ -96,21 +105,26 @@ describe("Firestore privacy boundary", () => {
     await assertFails(deleteDoc(privatePathForSecondAccount));
   });
 
-  it("allows only safe visible public projections and hides legacy documents", async () => {
+  it("denies all direct browser reads of public projections, including legacy documents", async () => {
     const visitor = visitorDb();
     const publicProjection = doc(visitor, "publicDreams", "opaque-public-id");
     const legacyProjection = doc(visitor, "publicDreams", "legacy-leak");
-    const visibleFeed = query(collection(visitor, "publicDreams"), where("visibility", "==", "visible"));
+    const visibleFeed = query(
+      collection(visitor, "publicDreams"),
+      where("visibility", "==", "visible"),
+      where("schemaVersion", "==", 2),
+    );
 
-    await assertSucceeds(getDoc(publicProjection));
-    await assertSucceeds(getDocs(visibleFeed));
+    await assertFails(getDoc(publicProjection));
+    await assertFails(getDocs(visibleFeed));
     await assertFails(getDoc(legacyProjection));
   });
 
-  it("denies all direct browser writes to public projections and publication links", async () => {
+  it("denies all direct browser writes to public projections, links, and publication state", async () => {
     const owner = ownerDb();
     const publicProjection = doc(owner, "publicDreams", "forged-public-id");
     const publicationLink = doc(owner, "users", "owner-a", "publicationLinks", "private-dream");
+    const privateDream = doc(owner, "users", "owner-a", "dreams", "private-dream");
 
     await assertFails(setDoc(publicProjection, {
       id: "forged-public-id",
@@ -118,5 +132,12 @@ describe("Firestore privacy boundary", () => {
       title: "Una publicación forjada",
     }));
     await assertFails(deleteDoc(publicationLink));
+    await assertFails(setDoc(privateDream, {
+      date: "2026-08-13",
+      title: "Intento de publicar sin Worker",
+      body: "Una persona cliente no puede convertir una memoria privada en publicación.",
+      hue: "cyan",
+      visibility: "public",
+    }));
   });
 });

@@ -33,8 +33,3 @@ export async function getFirebaseDb() {
   const [{ getFirestore }, app] = await Promise.all([import("firebase/firestore"), getFirebaseApp()]);
   return getFirestore(app);
 }
-
-export async function getFirebaseFunctions() {
-  const [{ getFunctions }, app] = await Promise.all([import("firebase/functions"), getFirebaseApp()]);
-  return getFunctions(app, "us-central1");
-}

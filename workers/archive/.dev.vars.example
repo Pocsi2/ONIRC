@@ -1,0 +1,4 @@
+# Never commit a real .dev.vars file. Create it locally from this example.
+GOOGLE_SERVICE_ACCOUNT_EMAIL=onirc-public-archive@onirc-production.iam.gserviceaccount.com
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nreplace-with-a-local-development-key\n-----END PRIVATE KEY-----\n"
+MIGRATION_ADMIN_UIDS=replace-with-your-firebase-uid

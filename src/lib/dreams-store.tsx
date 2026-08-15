@@ -221,11 +221,16 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
 
   const restoreDream = React.useCallback((dream: Dream) => {
     const snapshot = getClientSnapshot();
-    const dreams = snapshot.dreams.some((item) => item.id === dream.id) ? snapshot.dreams : [...snapshot.dreams, dream];
+    // Deleting a published memory retires its public projection first. Undo
+    // restores the private source only; re-sharing remains an explicit choice.
+    const restored = dream.visibility === "public"
+      ? { ...dream, visibility: "private" as const, updatedAt: new Date().toISOString() }
+      : dream;
+    const dreams = snapshot.dreams.some((item) => item.id === restored.id) ? snapshot.dreams : [...snapshot.dreams, restored];
     setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
     if (user && cloud.status === "synced") {
       void import("@/lib/cloud-dreams")
-        .then(({ saveDreamToCloud }) => saveDreamToCloud(user.uid, dream))
+        .then(({ saveDreamToCloud }) => saveDreamToCloud(user.uid, restored))
         .catch(() => setCloud({ status: "error", message: "La restauración quedó localmente; la copia privada no pudo actualizarse." }));
     }
   }, [cloud.status, user]);
@@ -245,9 +250,10 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
       const dreams = snapshot.dreams.map((dream) => dream.id === id ? published : dream);
       setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
       setCloud((currentCloud) => ({ ...currentCloud, publicName: cleanName }));
-    } catch {
-      setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No fue posible compartir este recuerdo. Sigue siendo privado." }));
-      throw new Error("No fue posible compartir este recuerdo.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No fue posible compartir este recuerdo. Sigue siendo privado.";
+      setCloud((currentCloud) => ({ ...currentCloud, status: "error", message }));
+      throw error;
     }
   }, [cloud.status, user]);
 
@@ -263,9 +269,10 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
       await unpublishDreamThroughArchive(id);
       const dreams = snapshot.dreams.map((dream) => dream.id === id ? privateDream : dream);
       setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
-    } catch {
-      setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No fue posible retirar la publicación. El recuerdo sigue público hasta que se confirme el cambio." }));
-      throw new Error("No fue posible retirar la publicación.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No fue posible retirar la publicación. El recuerdo sigue público hasta que se confirme el cambio.";
+      setCloud((currentCloud) => ({ ...currentCloud, status: "error", message }));
+      throw error;
     }
   }, [cloud.status, user]);
 
