@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { DreamPearl } from "@/components/dream-pearl";
 import { PageTransition } from "@/components/motion/page-transition";
 import { formatDreamDate } from "@/lib/dreams";
-import type { PublicDream } from "@/lib/cloud-dreams";
+import type { PublicDream } from "@/lib/public-archive";
 import { isPublicArchiveAvailable } from "@/lib/archive-state";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
@@ -18,22 +18,13 @@ export function PublicDreamFeed() {
   React.useEffect(() => {
     if (!isPublicArchiveAvailable) return;
     let active = true;
-    let unsubscribe: (() => void) | undefined;
 
-    void import("@/lib/cloud-dreams")
-      .then(({ subscribeToPublicDreams }) => subscribeToPublicDreams(
-        (nextDreams) => {
-          if (!active) return;
-          setDreams(nextDreams);
-          setStatus("ready");
-        },
-        () => {
-          if (active) setStatus("error");
-        },
-      ))
-      .then((nextUnsubscribe) => {
-        if (active) unsubscribe = nextUnsubscribe;
-        else nextUnsubscribe();
+    void import("@/lib/public-archive")
+      .then(({ loadPublicDreamsFromArchive }) => loadPublicDreamsFromArchive())
+      .then((nextDreams) => {
+        if (!active) return;
+        setDreams(nextDreams);
+        setStatus("ready");
       })
       .catch(() => {
         if (active) setStatus("error");
@@ -41,7 +32,6 @@ export function PublicDreamFeed() {
 
     return () => {
       active = false;
-      unsubscribe?.();
     };
   }, []);
 
@@ -71,7 +61,7 @@ export function PublicDreamFeed() {
           <p className="mt-4 flex max-w-2xl items-start gap-2 text-sm leading-6 text-text-muted"><Globe2 className="mt-1 h-4 w-4 shrink-0" /> Lo que aparece aquí es público. No compartas información que prefieras conservar en privado.</p>
         </div>
 
-        {status === "loading" ? <div role="status" className="mt-14 flex items-center gap-3 text-sm text-text-muted"><LoaderCircle className="h-4 w-4 animate-spin" /> Escuchando el espacio…</div> : null}
+        {status === "loading" ? <div role="status" className="mt-14 flex items-center gap-3 text-sm text-text-muted"><LoaderCircle className="h-4 w-4 animate-spin" /> Abriendo el archivo…</div> : null}
         {status === "error" ? <div role="alert" className="surface-frost mt-14 flex max-w-xl items-start gap-3 rounded-[24px] p-5 text-sm leading-6 text-text-secondary"><CloudOff className="mt-1 h-4 w-4 shrink-0 text-memory-accessible" /> No pudimos abrir las memorias públicas ahora. Inténtalo de nuevo en un momento.</div> : null}
         {status === "ready" && dreams.length === 0 ? <div className="surface-opal mt-14 max-w-xl rounded-[32px] p-8 sm:p-10"><p className="font-display text-4xl leading-none">Todavía hay silencio.</p><p className="mt-4 text-sm leading-6 text-text-secondary">Cuando alguien haga público un sueño, aparecerá aquí como una nueva perla.</p></div> : null}
 

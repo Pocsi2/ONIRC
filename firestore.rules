@@ -6,11 +6,20 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    function keepsPublicationState() {
+      // Browser clients can never create a public state or silently retract
+      // one. The trusted archive worker bypasses rules for those atomic changes.
+      return request.resource.data.visibility == resource.data.visibility
+        || (resource.data.visibility != "public" && request.resource.data.visibility != "public");
+    }
+
     match /users/{userId} {
       allow read, create, update, delete: if owns(userId);
 
       match /dreams/{dreamId} {
-        allow read, create, update, delete: if owns(userId);
+        allow read, delete: if owns(userId);
+        allow create: if owns(userId) && request.resource.data.visibility != "public";
+        allow update: if owns(userId) && keepsPublicationState();
       }
 
       // Server-managed references prove ownership without placing a UID or a
@@ -21,11 +30,11 @@ service cloud.firestore {
       }
     }
 
-    // Browser clients can only read visible, server-created projections. The
-    // Admin SDK used by Functions bypasses these rules by design.
+    // The public feed is served by the trusted Worker, which filters a closed
+    // projection schema before responding. Direct Firestore reads stay denied
+    // so a malformed or inherited document can never leak through a query.
     match /publicDreams/{publicDreamId} {
-      allow read: if resource.data.visibility == "visible";
-      allow write: if false;
+      allow read, write: if false;
     }
 
     // Reports contain private reporter metadata and are never client-readable.

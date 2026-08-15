@@ -5,8 +5,10 @@
 out/
 .onirc-build-quarantine-*/
 node_modules/
-functions/lib/
-functions/node_modules/
+functions/
+workers/archive/.wrangler/
+workers/archive/.dev.vars
+workers/archive/.env
 gha-creds-*.json
 firestore-debug.log
 tsconfig.tsbuildinfo

@@ -1,0 +1,58 @@
+name: Deploy Onirc public archive Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type DEPLOY after runtime secrets and the protected environment are ready
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: onirc-public-archive-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install and validate Worker
+        run: |
+          npm ci
+          npm run worker:check
+
+  deploy:
+    needs: validate
+    if: inputs.confirm == 'DEPLOY'
+    runs-on: ubuntu-latest
+    environment: cloudflare-archive-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy Worker code
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npm run worker:deploy

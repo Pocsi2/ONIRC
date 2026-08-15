@@ -22,6 +22,15 @@ type DreamFocusProps = {
   onMakePrivate: () => void;
 };
 
+const publicPseudonymPattern = /^[\p{L}\p{N}][\p{L}\p{N} '’.-]*$/u;
+
+function publicPseudonymError(value: string) {
+  const clean = value.trim().replace(/\s+/g, " ");
+  if (clean.length < 2 || clean.length > 32) return "Elige un seudónimo de 2 a 32 caracteres.";
+  if (!publicPseudonymPattern.test(clean)) return "Usa letras, números, espacios, guiones, puntos o apóstrofes; no uses correo.";
+  return null;
+}
+
 export function DreamFocus({ dream, onBack, onEdit, onDelete, canShare, publicName, onPublish, onMakePrivate }: DreamFocusProps) {
   const reducedMotion = useReducedMotion();
   const backRef = React.useRef<HTMLButtonElement>(null);
@@ -76,9 +85,19 @@ export function DreamFocus({ dream, onBack, onEdit, onDelete, canShare, publicNa
                 <label className="mt-5 block text-sm font-medium text-text-secondary">Tu seudónimo público
                   <Input value={pseudonym} onChange={(event) => { setPseudonym(event.target.value); setPublicError(""); }} maxLength={32} placeholder="Por ejemplo, Marea quieta" className="mt-2" aria-describedby={publicError ? "pseudonym-error" : undefined} />
                 </label>
+                <p className="mt-2 text-xs leading-5 text-text-muted">2–32 caracteres. No uses tu correo ni un nombre que no quieras mostrar.</p>
                 {publicError ? <p id="pseudonym-error" role="alert" className="mt-2 text-sm text-memory-accessible">{publicError}</p> : null}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button variant="secondary" onClick={() => { if (pseudonym.trim().length < 2) { setPublicError("Elige un seudónimo de al menos dos caracteres."); return; } void onPublish(pseudonym).then(() => setConfirmingPublic(false)); }}><Globe2 className="h-4 w-4" />Compartir públicamente</Button>
+                  <Button variant="secondary" onClick={() => {
+                    const validationError = publicPseudonymError(pseudonym);
+                    if (validationError) {
+                      setPublicError(validationError);
+                      return;
+                    }
+                    void onPublish(pseudonym)
+                      .then(() => setConfirmingPublic(false))
+                      .catch((error: unknown) => setPublicError(error instanceof Error ? error.message : "No fue posible compartir este recuerdo."));
+                  }}><Globe2 className="h-4 w-4" />Compartir públicamente</Button>
                   <button type="button" className="min-h-10 px-3 text-sm" onClick={() => setConfirmingPublic(false)}>Mantener privado</button>
                 </div>
               </div>

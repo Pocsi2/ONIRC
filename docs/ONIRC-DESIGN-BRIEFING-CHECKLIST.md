@@ -1,8 +1,8 @@
 # Onirc — Briefing de producto, diseño y calidad
 
-**Versión:** 3.2 — Release Candidate «Archivo de luz»
-**Fecha:** 13 de agosto de 2026  
-**Estado:** fuente de verdad operativa; archivo público congelado hasta completar despliegue confiable
+**Versión:** 3.3 — Release Candidate «Archivo de luz»
+**Fecha:** 14 de agosto de 2026
+**Estado:** fuente de verdad operativa; archivo público preparado y congelado hasta completar activación verificable
 **Producto publicado:** [pocsi2.github.io/ONIRC](https://pocsi2.github.io/ONIRC/)
 
 ---
@@ -39,9 +39,9 @@ La experiencia debe comunicar luz, espacio, materia, profundidad y movimiento co
 | Tema | Implementado | Sistema / Día / Noche cálida, persistido localmente. |
 | Firebase Auth | Implementado | Google y correo/contraseña. |
 | Sincronización privada | Implementado | Activación explícita; Firestore por `uid`, con unión que evita pérdida silenciosa. |
-| Publicar | Congelado | La interfaz permanece oculta mientras se migra a una Function confiable sin IDs internos públicos. |
-| Feed público | Congelado | `/explorar` existe como estado de preparación; no consulta ni muestra memorias públicas. |
-| Retirar publicación | Pendiente de Function | `unpublishDream()` está implementada y compilada, pendiente de despliegue protegido. |
+| Publicar | Preparado, congelado | Un Worker confiable crea sólo proyecciones v2 cerradas; la interfaz sigue oculta hasta configurar y verificar el Worker. |
+| Feed público | Preparado, congelado | /explorar muestra preparación hasta que Pages reciba una URL Worker verificada; después el feed pasa sólo por ese Worker. |
+| Retirar publicación | Preparado, congelado | El Worker retira atómicamente la copia pública vinculada y devuelve la fuente a privada; falta validación de producción. |
 | Perfiles públicos | Diferido | No hay páginas de perfil, seguidores ni mensajes. |
 | Comentarios, likes, reportes | Diferido | No deben añadirse sin moderación, bloqueo y política de abuso. |
 | Exportación / importación | Diferido | No se muestra como disponible. |
@@ -64,10 +64,10 @@ La experiencia debe comunicar luz, espacio, materia, profundidad y movimiento co
 - Nube-cortina: abre “Registrar sueño”.
 - Detalle, editor y colección viven en el estado URL: `month`, `dream`, `collection`, `compose`, `date`.
 
-### Espacio público `/explorar` (congelado)
+### Espacio público /explorar (preparado, congelado)
 
-- Mientras se completa la migración, comunica de forma explícita que el archivo está en preparación y no carga datos públicos.
-- Tras la migración, será una galería editorial sin métricas ni perfiles; cada pieza incluirá Perla, fecha, título, narrativa y firma seudónima.
+- Mientras se completa la activación, comunica de forma explícita que el archivo está en preparación y no carga datos públicos.
+- Tras la activación, será una galería editorial sin métricas ni perfiles; cada pieza llegará filtrada por el Worker e incluirá Perla, fecha, título, narrativa y firma seudónima.
 
 ### Cuenta y nube
 
@@ -92,21 +92,21 @@ La experiencia debe comunicar luz, espacio, materia, profundidad y movimiento co
 3. Leer el alcance: la copia será visible a cualquiera y la original seguirá privada.
 4. Elegir un seudónimo de 2 a 32 caracteres.
 5. Confirmar **Compartir públicamente**.
-6. Una Function autenticada crea una proyección segura con ID opaco; sólo entonces se muestra en `/explorar`.
+6. Un Worker autenticado crea una proyección segura con ID opaco; sólo entonces se muestra en /explorar.
 
 El seudónimo se guarda sólo en el documento privado del usuario para reutilizarlo. Cambiarlo en una publicación futura no modifica retroactivamente publicaciones anteriores: ese comportamiento sólo puede añadirse con una decisión explícita de producto.
 
-### Reglas de Firestore
+### Reglas de Firestore y Worker
 
-- `users/{userId}` y su subcolección `dreams` sólo permiten lectura/escritura al propietario autenticado.
-- `publicDreams` sólo permite leer documentos seguros con `visibility == "visible"`; los documentos heredados quedan denegados.
-- El navegador no puede crear, actualizar ni eliminar publicaciones. Sólo una Function autenticada puede hacerlo con Admin SDK.
-- La proyección pública nunca incluye `ownerId`, `sourceDreamId`, UID, correo ni rutas internas.
-- El archivo versionado es [`firestore.rules`](../firestore.rules); las reglas activas de Firebase deben mantenerse idénticas.
+- users/{userId} y su subcolección dreams sólo permiten lectura/escritura al propietario autenticado.
+- publicDreams deniega toda lectura y escritura directa desde el navegador. Esto incluye visitante, propietaria, segunda cuenta y documentos heredados.
+- El Worker confiable es el único componente que puede leer las proyecciones, aplicar un allow-list de nueve campos y crear, retirar o reportar una publicación.
+- La proyección pública nunca incluye ownerId, sourceDreamId, UID, correo ni rutas internas.
+- El archivo versionado firestore.rules debe coincidir con la configuración activa de Firebase.
 
 ### Riesgo pendiente — obligatorio antes de promoción pública
 
-La congelación está aplicada y la nueva arquitectura está implementada, pero Functions no se ha desplegado aún. El despliegue requiere Blaze, Workload Identity Federation, un environment protegido y una migración administrativa ensayada. Hasta entonces no declarar archivo abierto ni habilitar `ONIRC_PUBLIC_ARCHIVE_STATE=available`. El procedimiento completo vive en [`FIREBASE-RELEASE-RUNBOOK.md`](FIREBASE-RELEASE-RUNBOOK.md).
+La congelación permanece aplicada hasta que Cloudflare Workers tenga secretos configurados, el health check y el recorrido de publicar/retirar/reporte pasen, y la retirada heredada complete. Pages sólo activa el archivo cuando ONIRC_PUBLIC_ARCHIVE_STATE vale available **y** ONIRC_PUBLIC_ARCHIVE_API_URL es una URL HTTPS confiable. El procedimiento completo vive en [PUBLIC-ARCHIVE-WORKER-RUNBOOK.md](PUBLIC-ARCHIVE-WORKER-RUNBOOK.md).
 
 ## 5. Dirección de arte — Archivo de luz
 

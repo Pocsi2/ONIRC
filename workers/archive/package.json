@@ -1,0 +1,5 @@
+{
+  "name": "@onirc/public-archive-worker",
+  "private": true,
+  "type": "module"
+}
