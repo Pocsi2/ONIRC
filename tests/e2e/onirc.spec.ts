@@ -14,22 +14,22 @@ async function recordDream(page: import("@playwright/test").Page, title: string,
   await page.getByRole("button", { name: "Registrar sueño" }).click();
   await page.locator("#dream-body").fill(body);
   await page.locator("#dream-title").fill(title);
-  await page.getByRole("button", { name: "Guardar en el tiempo" }).click();
+  await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.locator('[role="status"]').filter({ hasText: title })).toContainText("ya vive en tu calendario");
+  await expect(page.getByRole("status")).toContainText("Registro guardado.");
 }
 
 test("permite conservar, abrir, editar y deshacer la eliminación de un sueño local", async ({ page }) => {
   await startWithEmptyCalendar(page);
-  await expect(page.getByText("Aquí empieza el tiempo.")).toBeVisible();
+  await expect(page.getByText("No hay sueños todavía.")).toBeVisible();
   await recordDream(page, "El jardín blanco", "Un jardín blanco se abría en habitaciones llenas de mañanas pequeñas.");
-  await expect(page.getByText("ya vive en tu calendario")).toBeVisible();
+  await expect(page.getByText("Registro guardado.")).toBeVisible();
   await page.getByRole("button", { name: /Abrir sueño: El jardín blanco/ }).click();
   await expect(page.getByRole("heading", { name: "El jardín blanco" })).toBeVisible();
   await page.getByRole("button", { name: "Editar" }).click();
   await page.locator("#dream-title").fill("El jardín de porcelana");
-  await page.getByRole("button", { name: "Conservar cambios" }).click();
-  await expect(page.getByText(/El jardín de porcelana.*ya vive en tu calendario/)).toBeVisible();
+  await page.getByRole("button", { name: "Actualizar" }).click();
+  await expect(page.getByText("Registro guardado.")).toBeVisible();
   await page.getByRole("button", { name: /Abrir sueño: El jardín de porcelana/ }).click();
   await page.getByRole("button", { name: "Eliminar" }).click();
   await page.getByRole("button", { name: "Eliminar sueño" }).click();
@@ -37,16 +37,16 @@ test("permite conservar, abrir, editar y deshacer la eliminación de un sueño l
   await expect(page.getByRole("button", { name: /Abrir sueño: El jardín de porcelana/ })).toBeVisible();
 });
 
-test("abre una colección finita cuando un día contiene varias memorias", async ({ page }) => {
+test("abre una colección finita cuando un día contiene varios sueños", async ({ page }) => {
   await startWithEmptyCalendar(page);
   await recordDream(page, "Un pasillo azul", "Un pasillo azul llevaba a una puerta que respiraba como una ventana.");
   await recordDream(page, "La habitación de agua", "Una habitación de agua sostenía un vaso de luz sobre una mesa pequeña.");
   await page.getByRole("button", { name: /Abrir 2 sueños del/ }).click();
-  await expect(page.getByRole("heading", { name: "2 recuerdos en un día." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "2 sueños ese día." })).toBeVisible();
   await page.getByRole("button", { name: "Abrir sueño: La habitación de agua" }).click();
   await expect(page.getByRole("heading", { name: "La habitación de agua" })).toBeVisible();
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "2 recuerdos en un día." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "2 sueños ese día." })).toBeVisible();
   await page.getByRole("button", { name: "Volver al calendario" }).click();
   await expect(page.getByRole("button", { name: /Abrir 2 sueños del/ })).toBeVisible();
 });
@@ -69,10 +69,10 @@ test("escribe antes de clasificar y conserva el punto de origen al volver", asyn
   await expect(page.locator("#dream-date")).toBeVisible();
   await expect(page.locator("#dream-title")).toBeVisible();
   await page.locator("#dream-title").fill("Escalera de sal");
-  await page.getByRole("button", { name: "Guardar en el tiempo" }).click();
+  await page.getByRole("button", { name: "Guardar" }).click();
   const pearl = page.getByRole("button", { name: /Abrir sueño: Escalera de sal/ });
   await pearl.click();
   await expect(page).toHaveURL(/dream=/);
-  await page.getByRole("button", { name: "Volver al tiempo" }).click();
+  await page.getByRole("button", { name: "Volver al calendario" }).click();
   await expect(pearl).toBeFocused();
 });
