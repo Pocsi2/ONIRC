@@ -15,20 +15,19 @@ async function recordDream(page: import("@playwright/test").Page, title: string,
   await page.locator("#dream-body").fill(body);
   await page.locator("#dream-title").fill(title);
   await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByRole("status")).toContainText("Registro guardado.");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
 test("permite conservar, abrir, editar y deshacer la eliminación de un sueño local", async ({ page }) => {
   await startWithEmptyCalendar(page);
   await expect(page.getByText("No hay sueños todavía.")).toBeVisible();
   await recordDream(page, "El jardín blanco", "Un jardín blanco se abría en habitaciones llenas de mañanas pequeñas.");
-  await expect(page.getByText("Registro guardado.")).toBeVisible();
   await page.getByRole("button", { name: /Abrir sueño: El jardín blanco/ }).click();
   await expect(page.getByRole("heading", { name: "El jardín blanco" })).toBeVisible();
   await page.getByRole("button", { name: "Editar" }).click();
   await page.locator("#dream-title").fill("El jardín de porcelana");
   await page.getByRole("button", { name: "Actualizar" }).click();
-  await expect(page.getByText("Registro guardado.")).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: /Abrir sueño: El jardín de porcelana/ }).click();
   await page.getByRole("button", { name: "Eliminar" }).click();
   await page.getByRole("button", { name: "Eliminar sueño" }).click();

@@ -104,6 +104,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const submitted = new FormData(event.currentTarget);
     const cleanTitle = title.trim();
     const cleanBody = body.trim();
     if (cleanBody.length < 8) {
@@ -120,12 +121,14 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
       setError("No se permiten fechas futuras.");
       return;
     }
-    const normalizedNeuroUrl = normalizeNeuroFileUrl(neuroFileUrl);
+    const submittedNeuroUrl = submitted.get("neuroFileUrl");
+    const normalizedNeuroUrl = normalizeNeuroFileUrl(typeof submittedNeuroUrl === "string" ? submittedNeuroUrl : neuroFileUrl);
     if (normalizedNeuroUrl === null) {
       setError("El enlace EEG/MRI debe ser una URL segura que empiece con https://");
       return;
     }
-    const cleanPseudonym = pseudonym.trim().replace(/\s+/g, " ");
+    const submittedPseudonym = submitted.get("publicName");
+    const cleanPseudonym = (typeof submittedPseudonym === "string" ? submittedPseudonym : pseudonym).trim().replace(/\s+/g, " ");
     if (visibility === "public") {
       if (!isPublicArchiveAvailable || cloud.status !== "synced") {
         setError("Inicia sesión y sincroniza tu cuenta antes de hacerlo público.");
@@ -223,7 +226,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
               {visibility === "public" ? (
                 <label htmlFor="dream-pseudonym" className="block">
                   <span className="mb-2 block text-sm font-medium text-text-secondary">Seudónimo público</span>
-                  <Input id="dream-pseudonym" value={pseudonym} onChange={(event) => updateField(setPseudonym, event.target.value)} placeholder="Cómo quieres firmarlo" maxLength={32} autoComplete="off" />
+                  <Input id="dream-pseudonym" name="publicName" value={pseudonym} onChange={(event) => updateField(setPseudonym, event.target.value)} placeholder="Cómo quieres firmarlo" maxLength={32} autoComplete="off" />
                   {cloud.status !== "synced" ? <span className="mt-2 block text-xs leading-5 text-text-muted">Necesitas iniciar sesión y sincronizar antes de publicar.</span> : null}
                 </label>
               ) : null}
@@ -234,7 +237,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
                     <span className="flex items-center gap-2"><Link2 className="h-3.5 w-3.5" />EEG / MRI <span className="font-normal text-text-muted">opcional</span></span>
                     <button type="button" className="min-h-9 px-2 text-xs font-normal text-text-muted underline-offset-4 hover:underline" onClick={() => { setNeuroFileUrl(""); setShowNeuroLink(false); setIsDirty(true); }}>Quitar</button>
                   </span>
-                  <Input id="dream-neuro-file" type="url" inputMode="url" value={neuroFileUrl} onChange={(event) => updateField(setNeuroFileUrl, event.target.value)} placeholder="https://…" maxLength={2048} aria-describedby="dream-neuro-file-note" />
+                  <Input id="dream-neuro-file" name="neuroFileUrl" type="url" inputMode="url" value={neuroFileUrl} onChange={(event) => updateField(setNeuroFileUrl, event.target.value)} placeholder="https://…" maxLength={2048} aria-describedby="dream-neuro-file-note" />
                   <span id="dream-neuro-file-note" className="mt-2 block text-xs leading-5 text-text-muted">Sólo enlaza una referencia segura. Permanece en tu memoria privada y no se publica.</span>
                 </label>
               ) : (
