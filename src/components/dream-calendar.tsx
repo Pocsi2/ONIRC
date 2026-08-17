@@ -172,7 +172,7 @@ export function DreamCalendar() {
   function handleSaved(dream: Dream) {
     setHighlightedId(dream.id);
     setToast({ dream, kind: "saved" });
-    updateUrl({ month: monthKeyForDate(dream.date), compose: null, date: null, dream: null, collection: null });
+    router.replace(`/calendar?month=${monthKeyForDate(dream.date)}`, { scroll: false });
     window.setTimeout(() => setHighlightedId(null), 1800);
   }
 
