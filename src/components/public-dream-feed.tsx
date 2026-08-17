@@ -118,7 +118,7 @@ export function PublicDreamFeed() {
       <PageTransition className="pb-16">
         <section className="mx-auto max-w-3xl pt-5 sm:pt-10">
           <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.28em] text-text-muted"><Compass className="h-3.5 w-3.5" /> Archivo abierto</p>
-          <h1 className="mt-5 font-display text-balance text-[clamp(4.2rem,10vw,8.5rem)] leading-[.84] tracking-[-0.06em]">Archivo en<br />preparación.</h1>
+          <h1 className="mt-5 font-display text-balance text-[clamp(3.25rem,10vw,8.5rem)] leading-[.84] tracking-[-0.06em]">Archivo en<br />preparación.</h1>
           <div className="surface-opal mt-12 max-w-xl rounded-[32px] p-8 sm:p-10">
             <ShieldCheck className="h-5 w-5 text-memory-accessible" aria-hidden="true" />
             <p className="mt-5 font-display text-4xl leading-none">Publicación desactivada.</p>
@@ -134,7 +134,7 @@ export function PublicDreamFeed() {
       <section className="mx-auto max-w-[1180px] pt-5 sm:pt-10">
         <div className="max-w-3xl">
           <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.28em] text-text-muted"><Compass className="h-3.5 w-3.5" /> Espacio público</p>
-          <h1 className="mt-5 font-display text-balance text-[clamp(4.2rem,10vw,8.5rem)] leading-[.84] tracking-[-0.06em]">Sueños<br />compartidos.</h1>
+          <h1 className="mt-5 font-display text-balance text-[clamp(3.25rem,10vw,8.5rem)] leading-[.84] tracking-[-0.06em]">Sueños<br />compartidos.</h1>
           <p className="mt-7 max-w-2xl text-lg leading-8 text-text-secondary">Un archivo seudónimo para recorrer una memoria a la vez.</p>
           <p className="mt-4 flex max-w-2xl items-start gap-2 text-sm leading-6 text-text-muted"><Globe2 className="mt-1 h-4 w-4 shrink-0" /> Lo que aparece aquí es público. No compartas información que prefieras conservar en privado.</p>
         </div>
