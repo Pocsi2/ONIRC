@@ -89,7 +89,7 @@ export function AuthControl() {
     return (
       <div className="flex items-center gap-1.5">
         <span className="hidden max-w-28 truncate text-xs text-text-muted md:inline">{name}</span>
-        <Button variant="ghost" size="sm" className="min-h-11 rounded-[16px] px-3" onClick={leaveAccount} disabled={pending === "sign-out"} aria-label="Cerrar sesión">
+        <Button data-memory-target variant="ghost" size="sm" className="memory-nav-trigger min-h-11 min-w-11 rounded-full border-0 bg-transparent px-3 shadow-none" onClick={leaveAccount} disabled={pending === "sign-out"} aria-label="Cerrar sesión">
           <LogOut className="h-4 w-4" />
           <span className="hidden lg:inline">Cerrar sesión</span>
         </Button>
@@ -99,9 +99,9 @@ export function AuthControl() {
 
   return (
     <>
-      <Button variant="secondary" size="sm" className="min-h-11 rounded-[16px] px-3" onClick={openAccess} aria-label="Iniciar sesión">
+      <Button data-memory-target variant="ghost" size="sm" className="memory-nav-trigger min-h-11 min-w-11 rounded-full border-0 bg-transparent px-3 shadow-none" onClick={openAccess} aria-label="Iniciar sesión">
         <LogIn className="h-4 w-4" />
-        <span className="hidden sm:inline">Iniciar sesión</span>
+        <span className="sr-only">Iniciar sesión</span>
       </Button>
 
       <AnimatePresence>

@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRight, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { HoldPublicCalendar } from "@/components/hold-public-calendar";
 import { PageTransition } from "@/components/motion/page-transition";
-import { ViewTransitionLink } from "@/components/view-transition-link";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
 export function HomeExperience() {
@@ -17,17 +17,15 @@ export function HomeExperience() {
         transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="max-w-4xl"
       >
-        <p className="text-xs font-medium uppercase tracking-[0.3em] text-text-muted">Registro de sueños</p>
-        <h1 className="mt-7 font-display text-balance text-[clamp(4.4rem,10.5vw,9.6rem)] leading-[.83] tracking-[-0.065em] text-text-primary">
-          Guarda lo<br />que soñaste.
+        <p className="text-xs font-medium uppercase tracking-[0.34em] text-text-muted opacity-50">Registro de sueños</p>
+        <h1 className="mt-7 font-display text-balance text-[clamp(4rem,9.4vw,8.8rem)] leading-[.88] tracking-[-0.04em] text-text-primary">
+          Tus sueños<br />para siempre
         </h1>
-        <p className="mt-8 max-w-xl text-lg leading-8 text-text-secondary sm:text-xl sm:leading-9">
-          Escribe, guarda y consulta tus sueños.
+        <p className="mt-8 max-w-xl text-base leading-8 tracking-[0.03em] text-text-secondary sm:text-lg sm:leading-9">
+          Guarda y Comparte tus sueños.
         </p>
         <div className="mt-10 flex flex-col items-start gap-4">
-          <ViewTransitionLink href="/calendar" className="surface-pearl inline-flex min-h-12 items-center justify-center gap-2 rounded-[18px] px-5 text-sm font-medium transition hover:-translate-y-0.5 hover:shadow-float">
-            Abrir calendario <ArrowRight className="h-4 w-4" />
-          </ViewTransitionLink>
+          <HoldPublicCalendar />
           <p className="flex max-w-md items-start gap-2 text-sm leading-6 text-text-muted">
             <LockKeyhole className="mt-1 h-4 w-4 shrink-0" /> Guardado en este dispositivo. La copia privada es opcional.
           </p>
@@ -46,8 +44,8 @@ export function HomeExperience() {
         <div className="absolute left-1/2 top-1/2 grid h-32 w-32 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[radial-gradient(circle_at_31%_23%,rgba(255,255,255,.98),rgba(220,239,233,.8)_37%,rgba(230,224,237,.57)_70%,rgba(255,255,255,.25))] shadow-[0_24px_80px_rgba(96,90,84,.18)]">
           <span className="h-8 w-10 rounded-full bg-white/72 blur-[2px]" />
         </div>
-        <span className="absolute left-[13%] top-[33%] h-2 w-2 rounded-full bg-mist-champagne/80" />
-        <span className="absolute bottom-[18%] right-[17%] h-3 w-3 rounded-full bg-mist-lavender/80" />
+        <motion.span className="absolute left-[7%] top-[33%] h-px w-[28%] origin-left bg-memory-electric/70" animate={reducedMotion ? undefined : { rotate: [8, 18, 7], scaleX: [0.72, 1, 0.78] }} transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }} />
+        <span className="absolute bottom-[18%] right-[13%] h-px w-[19%] -rotate-12 bg-mist-lavender/80" />
       </motion.figure>
     </PageTransition>
   );

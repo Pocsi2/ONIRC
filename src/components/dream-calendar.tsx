@@ -5,7 +5,6 @@ import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CloudCurtain } from "@/components/cloud-curtain";
-import { CloudSyncControl } from "@/components/cloud-sync-control";
 import { DreamCollection } from "@/components/dream-collection";
 import { DreamComposer } from "@/components/dream-composer";
 import { DreamFocus } from "@/components/dream-focus";
@@ -16,8 +15,6 @@ import { useDreamStore } from "@/lib/dreams-store";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 import { calendarRecede, withReducedMotion } from "@/lib/motion/variants";
 import { cn } from "@/lib/utils";
-
-const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function keyForMonth(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -34,15 +31,59 @@ function dateForDay(month: Date, day: number) {
   return `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function mondayOffset(month: Date) {
-  return (month.getDay() + 6) % 7;
-}
-
 function daysInMonth(month: Date) {
   return new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
 }
 
 type Toast = { dream: Dream; kind: "deleted" | "saved" } | null;
+
+function monthName(month: Date) {
+  return new Intl.DateTimeFormat("es-GT", { month: "long" }).format(month);
+}
+
+function MonthWheel({ month, onStep, onToday }: { month: Date; onStep: (amount: number) => void; onToday: () => void }) {
+  const dragStart = React.useRef<number | null>(null);
+  const wheelLock = React.useRef(false);
+  const label = new Intl.DateTimeFormat("es-GT", { month: "short" }).format(month).replace(".", "");
+
+  return (
+    <button
+      type="button"
+      className="month-wheel group relative grid h-11 w-[5.25rem] touch-none place-items-center overflow-hidden rounded-full"
+      aria-label={`${monthLabel(month)}. Desliza para cambiar de mes; activa para volver al mes actual.`}
+      onClick={onToday}
+      onWheel={(event) => {
+        event.preventDefault();
+        if (wheelLock.current || Math.abs(event.deltaY) < 8) return;
+        wheelLock.current = true;
+        onStep(event.deltaY > 0 ? 1 : -1);
+        window.setTimeout(() => { wheelLock.current = false; }, 360);
+      }}
+      onPointerDown={(event) => {
+        dragStart.current = event.clientY;
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }}
+      onPointerUp={(event) => {
+        if (dragStart.current === null) return;
+        const distance = event.clientY - dragStart.current;
+        dragStart.current = null;
+        if (Math.abs(distance) > 22) {
+          event.preventDefault();
+          onStep(distance > 0 ? -1 : 1);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowUp" || event.key === "ArrowLeft") { event.preventDefault(); onStep(-1); }
+        if (event.key === "ArrowDown" || event.key === "ArrowRight") { event.preventDefault(); onStep(1); }
+      }}
+    >
+      <span className="absolute inset-x-3 top-1/2 h-px -translate-y-1/2 bg-[var(--border-light)]" />
+      <motion.span key={keyForMonth(month)} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative bg-[var(--surface-canvas)] px-2 text-[9px] font-medium uppercase tracking-[0.24em] text-text-secondary">{label}</motion.span>
+      <span className="absolute left-1/2 top-1 h-2 w-px -translate-x-1/2 bg-memory-electric/70 transition-all group-hover:h-3" />
+      <span className="absolute bottom-1 left-1/2 h-2 w-px -translate-x-1/2 bg-memory-electric/35 transition-all group-hover:h-3" />
+    </button>
+  );
+}
 
 export function DreamCalendar() {
   const router = useRouter();
@@ -52,6 +93,7 @@ export function DreamCalendar() {
   const [highlightedId, setHighlightedId] = React.useState<string | null>(null);
   const [toast, setToast] = React.useState<Toast>(null);
   const [confirmReset, setConfirmReset] = React.useState(false);
+  const [previewDate, setPreviewDate] = React.useState<string | null>(null);
   const previousDreamRef = React.useRef<string | null>(null);
 
   const currentMonth = monthFromKey(searchParams.get("month")) ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -64,7 +106,6 @@ export function DreamCalendar() {
   const requestedDate = searchParams.get("date");
   const composerDate = requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate <= todayIso() ? requestedDate : todayIso();
   const dayCount = daysInMonth(currentMonth);
-  const monthStartOffset = mondayOffset(currentMonth);
   const calendarVariants = withReducedMotion(calendarRecede, reducedMotion);
   const dreamMap = (() => {
     const result = new Map<string, Dream[]>();
@@ -75,6 +116,8 @@ export function DreamCalendar() {
     return result;
   })();
   const selectedCollection = selectedCollectionDate ? dreamMap.get(selectedCollectionDate) ?? [] : [];
+  const monthDreams = Array.from(dreamMap.values()).flat();
+  const previewDreams = previewDate ? dreamMap.get(previewDate) ?? [] : monthDreams;
 
   const updateUrl = React.useCallback((changes: Record<string, string | null>, mode: "push" | "replace" = "push") => {
     const params = new URLSearchParams(searchParams.toString());
@@ -141,79 +184,92 @@ export function DreamCalendar() {
   }
 
   const isCalendarEmpty = isReady && dreams.length === 0;
-  const isMonthEmpty = isReady && dreamMap.size === 0;
-
   return (
     <LayoutGroup id="calendar-memory">
       <div className="relative pb-28">
         <motion.div animate={selectedDream || selectedCollection.length > 1 ? "receded" : "rest"} initial="rest" variants={calendarVariants} className="z-calendar">
           <div className="mx-auto max-w-[1160px]">
-            <header className="mb-10 flex flex-col gap-7 border-b border-[var(--border-quiet)] pb-7 sm:mb-14 sm:flex-row sm:items-end sm:justify-between sm:pb-9">
+            <header className="mb-8 flex flex-col gap-7 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-3xl">
-                <p className="text-xs font-medium uppercase tracking-[0.3em] text-text-muted">Calendario</p>
-                <h1 className="mt-4 font-display text-balance text-[clamp(3.9rem,8vw,7.7rem)] leading-[.86] tracking-[-0.06em]">{monthLabel(currentMonth)}</h1>
-                <p className="mt-5 max-w-xl text-sm leading-6 text-text-secondary">
-                  {cloud.status === "synced" ? "Sincronizado con tu cuenta." : "Guardado en este dispositivo."}
-                </p>
-                {persistence.message ? <p role="status" aria-live="polite" className={cn("mt-3 text-sm leading-6", persistence.kind === "warning" ? "text-memory-accessible" : "text-text-muted")}>{persistence.message}</p> : null}
-                <CloudSyncControl />
+                <h1 className="font-display text-balance leading-none text-text-primary">
+                  <span className="block capitalize text-[clamp(4.8rem,10vw,9.8rem)] tracking-[-0.055em]">{monthName(currentMonth)}</span>
+                  <span className="mt-1 block text-[clamp(1rem,2.2vw,1.7rem)] font-normal tracking-[0.34em] text-text-muted">de {currentMonth.getFullYear()}</span>
+                </h1>
+                {persistence.kind === "warning" && persistence.message ? <p role="status" aria-live="polite" className="mt-3 text-xs leading-5 text-memory-accessible">{persistence.message}</p> : null}
               </div>
-              <div className="material-frost flex w-fit items-center gap-1 rounded-[18px] p-1" aria-label="Navegar meses">
-                <button type="button" className="material-button grid h-11 w-11 place-items-center rounded-[13px]" aria-label="Mes anterior" onClick={() => moveMonth(-1)}><ChevronLeft className="h-4 w-4" /></button>
-                <button type="button" className="min-h-11 rounded-[13px] px-3 text-sm text-text-secondary transition-colors hover:text-text-primary" onClick={() => updateUrl({ month: keyForMonth(new Date(new Date().getFullYear(), new Date().getMonth(), 1)), dream: null, collection: null, compose: null })}>Hoy</button>
-                <button type="button" className="material-button grid h-11 w-11 place-items-center rounded-[13px]" aria-label="Mes siguiente" onClick={() => moveMonth(1)}><ChevronRight className="h-4 w-4" /></button>
+              <div className="flex w-fit items-center gap-1 rounded-full border border-[var(--border-quiet)] bg-[color-mix(in_srgb,var(--surface-canvas)_68%,transparent)] p-1" aria-label="Navegar meses">
+                <button type="button" className="grid h-11 w-11 place-items-center rounded-full text-text-muted transition-colors hover:text-memory-electric" aria-label="Mes anterior" onClick={() => moveMonth(-1)}><ChevronLeft className="h-4 w-4" /></button>
+                <MonthWheel month={currentMonth} onStep={moveMonth} onToday={() => updateUrl({ month: keyForMonth(new Date(new Date().getFullYear(), new Date().getMonth(), 1)), dream: null, collection: null, compose: null })} />
+                <button type="button" className="grid h-11 w-11 place-items-center rounded-full text-text-muted transition-colors hover:text-memory-electric" aria-label="Mes siguiente" onClick={() => moveMonth(1)}><ChevronRight className="h-4 w-4" /></button>
               </div>
             </header>
 
-            <section aria-label={`Calendario de ${monthLabel(currentMonth)}`} className="relative">
-              <div className="grid grid-cols-7">
-                {weekDays.map((day) => <p key={day} className="pb-3 text-center text-[10px] font-medium uppercase tracking-[0.15em] text-text-muted sm:pb-4 sm:text-[11px] sm:tracking-[0.2em]">{day}</p>)}
-              </div>
-              <div className="grid grid-cols-7 border-b calendar-rule">
-                {Array.from({ length: monthStartOffset }).map((_, index) => (
-                  <div key={`blank-${index}`} aria-hidden="true" className={cn("calendar-rule min-h-[70px] border-t sm:min-h-[106px]", index % 7 !== 0 && "border-l")} />
-                ))}
+            <section aria-label={`Calendario de ${monthLabel(currentMonth)}`} className="relative mx-auto aspect-square w-full max-w-[680px] sm:-mt-28">
+              <div aria-hidden="true" className="absolute inset-[5%] rounded-full border border-[var(--calendar-line)]" />
+              <div aria-hidden="true" className="absolute inset-[15%] rounded-full border border-[var(--border-quiet)] opacity-65" />
+              <div aria-hidden="true" className="absolute left-1/2 top-[3%] h-[10%] w-px -translate-x-1/2 bg-gradient-to-b from-memory-electric/70 to-transparent" />
+              <ol className="absolute inset-0 m-0 list-none p-0">
                 {Array.from({ length: dayCount }, (_, index) => index + 1).map((day) => {
                   const date = dateForDay(currentMonth, day);
                   const dayDreams = dreamMap.get(date) ?? [];
                   const hasDreams = dayDreams.length > 0;
                   const isToday = date === todayIso();
-                  const column = (monthStartOffset + day - 1) % 7;
+                  const angle = ((day - 1) / dayCount) * Math.PI * 2 - Math.PI / 2;
+                  const left = 50 + Math.cos(angle) * 45;
+                  const top = 50 + Math.sin(angle) * 45;
                   return (
-                    <div key={date} className={cn("calendar-rule relative flex min-h-[70px] items-center justify-center border-t sm:min-h-[106px]", column !== 0 && "border-l") }>
-                      <span className={cn("absolute left-2.5 top-2.5 flex items-center gap-1 text-[11px] sm:left-3 sm:top-3 sm:text-xs", hasDreams ? "text-text-secondary" : "text-text-muted")}>
-                        {day}{isToday ? <><span className="h-1.5 w-1.5 rounded-full bg-memory-electric" aria-hidden="true" /><span className="sr-only">, hoy</span></> : null}
-                      </span>
-                      {hasDreams && dayDreams.length === 1 ? (
-                        <button
-                          id={`dream-pearl-${dayDreams[0].id}`}
-                          type="button"
-                          className="group relative grid min-h-11 min-w-11 place-items-center rounded-full"
-                          aria-label={`Abrir sueño: ${dayDreams[0].title}, ${formatDreamDate(dayDreams[0].date)}`}
-                          onClick={() => updateUrl({ dream: dayDreams[0].id, compose: null })}
-                        >
-                          <DreamPearl dream={dayDreams[0]} size="lg" interactive selected={highlightedId === dayDreams[0].id} focused={selectedDreamId === dayDreams[0].id} layoutId={`pearl-${dayDreams[0].id}`} />
-                          <span className="pointer-events-none absolute top-[calc(100%+0.35rem)] z-feedback hidden w-40 rounded-[12px] border border-[var(--border-quiet)] bg-[var(--surface-canvas)] px-3 py-2 text-center text-xs leading-5 text-text-secondary shadow-soft sm:block sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">{dayDreams[0].title}</span>
-                        </button>
-                      ) : hasDreams ? (
-                        <button type="button" className="group relative flex min-h-11 min-w-12 items-center justify-center rounded-full" aria-label={`Abrir ${dayDreams.length} sueños del ${formatDreamDate(date)}`} onClick={() => updateUrl({ collection: date, dream: null, compose: null })}>
-                          {dayDreams.slice(0, 3).map((dream, index) => <span key={dream.id} className="absolute" style={{ transform: `translate(${(index - (Math.min(dayDreams.length, 3) - 1) / 2) * 10}px, ${index % 2 ? 3 : -2}px)` }}><DreamPearl dream={dream} size="md" multiple interactive /></span>)}
-                          <span className="absolute -bottom-1 -right-1 rounded-full bg-[var(--surface-canvas)] px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">{dayDreams.length}</span>
-                        </button>
-                      ) : null}
-                    </div>
+                    <li key={date} className="orbit-day absolute" style={{ left: `${left}%`, top: `${top}%` }}>
+                      <button
+                        id={dayDreams.length === 1 ? `dream-pearl-${dayDreams[0].id}` : undefined}
+                        type="button"
+                        className={cn("group relative grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-[9px] font-medium transition-transform sm:h-11 sm:w-11 sm:text-[11px]", hasDreams ? "text-text-primary hover:scale-110" : "text-text-muted hover:text-text-primary", isToday && "after:absolute after:-bottom-0.5 after:h-px after:w-4 after:bg-memory-electric")}
+                        aria-label={hasDreams ? dayDreams.length === 1 ? `Abrir sueño: ${dayDreams[0].title}, ${formatDreamDate(date)}` : `Abrir ${dayDreams.length} sueños del ${formatDreamDate(date)}` : `${formatDreamDate(date)}, sin sueños`}
+                        onPointerEnter={() => setPreviewDate(date)}
+                        onPointerLeave={() => setPreviewDate(null)}
+                        onFocus={() => setPreviewDate(date)}
+                        onBlur={() => setPreviewDate(null)}
+                        onClick={() => {
+                          setPreviewDate(date);
+                          if (dayDreams.length === 1) updateUrl({ dream: dayDreams[0].id, compose: null });
+                          if (dayDreams.length > 1) updateUrl({ collection: date, dream: null, compose: null });
+                        }}
+                      >
+                        <span className="relative z-10">{day}</span>
+                        {hasDreams ? <span className="absolute left-1/2 top-[62%] -translate-x-1/2 scale-[.46] sm:top-[68%] sm:scale-[.58]"><DreamPearl dream={dayDreams[0]} size="md" multiple={dayDreams.length > 1} interactive /></span> : null}
+                        {hasDreams ? <span className="orbit-tooltip pointer-events-none absolute left-1/2 top-[calc(100%+0.55rem)] z-feedback w-36 -translate-x-1/2 rounded-full bg-[var(--surface-canvas)] px-3 py-2 text-center text-[9px] leading-4 tracking-[0.06em] text-text-secondary shadow-soft"><span className="text-memory-accessible">Tú</span> · {dayDreams[0].title}</span> : null}
+                      </button>
+                    </li>
                   );
                 })}
-              </div>
-              {isMonthEmpty ? (
-                <div className="mx-auto max-w-md py-12 text-center sm:py-16">
-                  <p className="font-display text-4xl leading-none tracking-[-0.04em]">{isCalendarEmpty ? "No hay sueños todavía." : "Sin registros este mes."}</p>
-                  <p className="mt-4 text-sm leading-6 text-text-secondary">{isCalendarEmpty ? "Añade el primero cuando quieras." : "Puedes cambiar de mes o registrar un sueño."}</p>
-                </div>
-              ) : null}
+              </ol>
+              <motion.div layout className="absolute inset-[23%] grid place-items-center rounded-full bg-[radial-gradient(circle_at_40%_34%,rgba(255,255,255,.66),rgba(255,255,255,.18)_46%,transparent_72%)] p-[8%] text-center backdrop-blur-[2px]">
+                <AnimatePresence mode="wait">
+                  <motion.div key={previewDate ?? "month"} initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, filter: "blur(5px)" }} animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }} exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.04, filter: "blur(4px)" }} transition={reducedMotion ? reducedTransition : transitions.expressive} className="w-full">
+                    {previewDate ? <p className="mb-3 text-[8px] uppercase tracking-[0.22em] text-text-muted sm:text-[10px]">{formatDreamDate(previewDate)}</p> : null}
+                    {previewDreams.length ? (
+                      <div>
+                        {!previewDate ? <p className="mb-3 text-[8px] uppercase tracking-[0.22em] text-text-muted sm:text-[10px]">{monthDreams.length} sueño{monthDreams.length === 1 ? "" : "s"}</p> : null}
+                        <div className="mx-auto flex max-w-md flex-wrap items-center justify-center gap-1.5 sm:gap-3">
+                          {previewDreams.slice(0, 7).map((dream) => (
+                            <button key={dream.id} type="button" className="group grid min-h-12 min-w-12 place-items-center rounded-full" aria-label={`Ver sueño en el centro: ${dream.title}`} onClick={() => updateUrl({ dream: dream.id, compose: null })}>
+                              <DreamPearl dream={dream} size="lg" interactive selected={highlightedId === dream.id} layoutId={`pearl-${dream.id}`} />
+                              <span className="mt-2 hidden max-w-24 text-[9px] leading-3 tracking-[0.04em] text-text-secondary sm:block">{dream.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="font-display text-[clamp(1.2rem,3vw,2.5rem)] leading-tight tracking-[-0.025em]">{isCalendarEmpty ? "No hay sueños todavía." : previewDate ? "Sin registro" : "Sin registros este mes."}</p>
+                        <p className="mx-auto mt-3 max-w-56 text-[9px] leading-4 tracking-[0.05em] text-text-muted sm:text-[11px]">{isCalendarEmpty ? "Registra el primero cuando quieras." : "Desliza el mes o elige otra fecha."}</p>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </motion.div>
             </section>
 
-            <footer className="mt-10 flex flex-col gap-4 border-t border-[var(--border-quiet)] pt-6 text-sm text-text-muted sm:flex-row sm:items-center sm:justify-between">
+            <footer className="mt-8 flex flex-col gap-3 border-t border-[var(--border-quiet)] pt-4 text-[10px] leading-4 text-text-muted sm:flex-row sm:items-center sm:justify-between">
               <p>{cloud.status === "synced" ? "Sincronizado de forma privada con tu cuenta." : "Este dispositivo guarda tus sueños localmente."}</p>
               {confirmReset ? (
                 <span className="flex flex-wrap items-center gap-2 text-text-secondary">
@@ -221,7 +277,7 @@ export function DreamCalendar() {
                   <Button size="sm" variant="secondary" onClick={() => { resetDreams(); setConfirmReset(false); }}>Sí, borrar datos</Button>
                   <button type="button" className="min-h-9 px-2 text-xs underline-offset-4 hover:underline" onClick={() => setConfirmReset(false)}>Cancelar</button>
                 </span>
-              ) : <button type="button" className="inline-flex min-h-10 items-center gap-2 self-start text-sm underline-offset-4 hover:underline sm:self-auto" onClick={() => setConfirmReset(true)}><RotateCcw className="h-3.5 w-3.5" />Borrar datos locales</button>}
+              ) : <button type="button" className="inline-flex min-h-10 items-center gap-2 self-start text-[10px] underline-offset-4 hover:underline sm:self-auto" onClick={() => setConfirmReset(true)}><RotateCcw className="h-3 w-3" />Borrar datos locales</button>}
             </footer>
           </div>
         </motion.div>

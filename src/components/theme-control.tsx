@@ -31,15 +31,16 @@ export function ThemeControl() {
     <div className="relative">
       <button
         ref={triggerRef}
+        data-memory-target
         type="button"
-        className="material-button inline-flex min-h-11 items-center gap-2 rounded-[16px] px-3 text-sm"
+        className="memory-nav-trigger inline-grid min-h-11 min-w-11 place-items-center rounded-full border-0 bg-transparent px-3 text-sm text-text-secondary"
         aria-label="Elegir tema"
         aria-expanded={isOpen}
         aria-controls={panelId}
         onClick={() => setIsOpen((current) => !current)}
       >
         <Palette className="h-4 w-4" />
-        <span className="hidden sm:inline">Tema</span>
+        <span className="sr-only">Tema</span>
       </button>
       {isOpen ? (
         <div id={panelId} className="surface-frost absolute right-0 top-[calc(100%+0.75rem)] z-feedback w-72 rounded-[24px] p-2" role="dialog" aria-label="Tema">

@@ -11,18 +11,19 @@ export function CloudCurtain({ onOpen, emphasized = false }: { onOpen: () => voi
     <motion.button
       type="button"
       onClick={onOpen}
-      whileHover={reducedMotion ? undefined : { y: -2 }}
-      whileTap={reducedMotion ? undefined : { scale: 0.985 }}
+      whileHover={reducedMotion ? undefined : { scale: 1.06, rotate: -2 }}
+      whileTap={reducedMotion ? undefined : { scale: 0.94 }}
       transition={reducedMotion ? reducedTransition : transitions.standard}
-      className="group relative flex min-h-12 items-center overflow-hidden rounded-full border border-white/65 bg-white/56 py-1 pl-2 pr-4 text-sm font-medium text-text-primary shadow-soft backdrop-blur-md [html[data-theme=night]_&]:border-white/15 [html[data-theme=night]_&]:bg-white/[.07]"
+      className="group relative grid h-[4.6rem] w-[4.6rem] place-items-center overflow-visible rounded-full border border-white/65 bg-white/28 text-text-primary shadow-soft backdrop-blur-md [html[data-theme=night]_&]:border-white/15 [html[data-theme=night]_&]:bg-white/[.05]"
       aria-label="Registrar sueño"
     >
-      <span className="absolute -left-2 top-1/2 h-12 w-12 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.95),rgba(221,242,239,.68)_44%,rgba(232,225,241,.42)_72%,transparent)] blur-[1px] transition-transform duration-[var(--motion-expressive)] ease-[var(--ease-dream)] group-hover:translate-x-7 group-focus-visible:translate-x-7" />
-      <span className="relative grid h-10 w-10 place-items-center rounded-full bg-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,.86)] [html[data-theme=night]_&]:bg-white/10">
+      <span className="absolute inset-1 rounded-full bg-[radial-gradient(circle_at_35%_28%,rgba(255,255,255,.98),rgba(221,242,239,.68)_38%,rgba(232,225,241,.42)_70%,transparent)] blur-[3px] transition-[filter,transform] duration-[var(--motion-dream)] ease-[var(--ease-dream)] group-hover:scale-110 group-hover:blur-0 group-focus-visible:scale-110 group-focus-visible:blur-0" />
+      <span className="absolute inset-[-7px] rounded-full border border-memory-electric/0 transition-all duration-[var(--motion-expressive)] group-hover:inset-[-12px] group-hover:border-memory-electric/50 group-focus-visible:inset-[-12px] group-focus-visible:border-memory-electric/50" />
+      <span className="relative grid h-11 w-11 place-items-center rounded-full bg-white/52 shadow-[inset_0_1px_0_rgba(255,255,255,.86)] [html[data-theme=night]_&]:bg-white/10">
         <Feather className="h-4 w-4" />
       </span>
-      <span className="relative ml-2 whitespace-nowrap">Registrar sueño</span>
-      {emphasized ? <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full bg-memory-electric" aria-hidden="true" /> : null}
+      <span className="pointer-events-none absolute right-[calc(100%+0.8rem)] whitespace-nowrap rounded-full bg-[var(--surface-canvas)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.14em] opacity-0 shadow-soft transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">Registrar sueño</span>
+      {emphasized ? <span className="absolute -right-1 top-1/2 h-px w-5 bg-memory-electric" aria-hidden="true" /> : null}
     </motion.button>
   );
 }

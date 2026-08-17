@@ -3,8 +3,8 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Onirc — Registro de sueños",
-  description: "Escribe, guarda y consulta tus sueños.",
+  title: "Onirc — Tus sueños para siempre",
+  description: "Guarda y comparte tus sueños.",
 };
 
 export const viewport: Viewport = {
