@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { Check, Chrome, LogIn, LogOut, Mail, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   createAccountWithEmail,
@@ -25,6 +26,7 @@ function friendlyAuthError(error: unknown) {
 }
 
 export function AuthControl() {
+  const router = useRouter();
   const { user } = useAuthSession();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
@@ -52,6 +54,7 @@ export function AuthControl() {
     try {
       await signInWithGoogle();
       setOpen(false);
+      router.push("/calendar");
     } catch (caught) {
       setError(friendlyAuthError(caught));
     } finally {
@@ -68,6 +71,7 @@ export function AuthControl() {
       else await createAccountWithEmail(email.trim(), password);
       setOpen(false);
       setPassword("");
+      router.push("/calendar");
     } catch (caught) {
       setError(friendlyAuthError(caught));
     } finally {

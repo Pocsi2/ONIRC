@@ -18,8 +18,8 @@ export function HomeExperience() {
         className="max-w-4xl"
       >
         <p className="text-xs font-medium uppercase tracking-[0.34em] text-text-muted opacity-50">Registro de sueños</p>
-        <h1 className="mt-7 font-display text-balance text-[clamp(4rem,9.4vw,8.8rem)] leading-[.88] tracking-[-0.04em] text-text-primary">
-          Tus sueños<br />para siempre
+        <h1 className="type-ethereal mt-7 font-display text-balance text-[clamp(4rem,9.4vw,8.8rem)] leading-[.88] tracking-[-0.035em] text-text-primary">
+          Tus sueños<br /><span className="type-ethereal-fringe">para siempre</span>
         </h1>
         <p className="mt-8 max-w-xl text-base leading-8 tracking-[0.03em] text-text-secondary sm:text-lg sm:leading-9">
           Guarda y Comparte tus sueños.

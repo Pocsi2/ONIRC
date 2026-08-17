@@ -191,7 +191,7 @@ export function DreamCalendar() {
           <div className="mx-auto max-w-[1160px]">
             <header className="mb-8 flex flex-col gap-7 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-3xl">
-                <h1 className="font-display text-balance leading-none text-text-primary">
+                <h1 className="type-ethereal font-display text-balance leading-none text-text-primary">
                   <span className="block capitalize text-[clamp(4.8rem,10vw,9.8rem)] tracking-[-0.055em]">{monthName(currentMonth)}</span>
                   <span className="mt-1 block text-[clamp(1rem,2.2vw,1.7rem)] font-normal tracking-[0.34em] text-text-muted">de {currentMonth.getFullYear()}</span>
                 </h1>

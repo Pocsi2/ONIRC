@@ -15,6 +15,7 @@ export function HoldPublicCalendar() {
   const startedAtRef = React.useRef(0);
   const [progress, setProgress] = React.useState(0);
   const [holding, setHolding] = React.useState(false);
+  const [hinting, setHinting] = React.useState(false);
 
   const cancel = React.useCallback(() => {
     if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
@@ -52,7 +53,18 @@ export function HoldPublicCalendar() {
     if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
   }, []);
 
+  React.useEffect(() => {
+    if (reducedMotion) return;
+    const startHint = window.setTimeout(() => setHinting(true), 850);
+    const stopHint = window.setTimeout(() => setHinting(false), 2450);
+    return () => {
+      window.clearTimeout(startHint);
+      window.clearTimeout(stopHint);
+    };
+  }, [reducedMotion]);
+
   const circumference = 2 * Math.PI * 27;
+  const visibleProgress = holding ? progress : hinting ? 0.22 : 0.035;
 
   return (
     <div className="relative">
@@ -68,6 +80,10 @@ export function HoldPublicCalendar() {
         className="group relative z-calendar grid h-[7.25rem] w-[7.25rem] touch-none place-items-center rounded-full border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--surface-canvas)_72%,transparent)] text-text-primary shadow-soft backdrop-blur-md sm:h-32 sm:w-32"
         aria-label={reducedMotion ? "Abrir calendario público" : "Mantén presionado cinco segundos para abrir el calendario público"}
         aria-describedby="public-calendar-instruction"
+        onPointerEnter={() => setHinting(true)}
+        onPointerLeave={() => { if (!holding) setHinting(false); }}
+        onFocus={() => setHinting(true)}
+        onBlur={() => { if (!holding) setHinting(false); }}
         onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); begin(); }}
         onPointerUp={cancel}
         onPointerCancel={cancel}
@@ -89,17 +105,15 @@ export function HoldPublicCalendar() {
       >
         <svg viewBox="0 0 64 64" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden="true">
           <circle cx="32" cy="32" r="27" pathLength="1" fill="none" stroke="var(--border-quiet)" strokeWidth="0.65" vectorEffect="non-scaling-stroke" />
-          <motion.circle cx="32" cy="32" r="27" fill="none" stroke="var(--color-memory-electric)" strokeWidth="1.4" strokeLinecap="round" strokeDasharray={circumference} animate={{ strokeDashoffset: circumference * (1 - progress), opacity: holding || progress ? 1 : 0.28 }} vectorEffect="non-scaling-stroke" />
+          <motion.circle cx="32" cy="32" r="27" fill="none" stroke="var(--color-memory-electric)" strokeWidth="1" strokeLinecap="round" strokeDasharray={circumference} animate={{ strokeDashoffset: circumference * (1 - visibleProgress), opacity: holding ? 1 : hinting ? 0.72 : 0.24 }} transition={reducedMotion ? reducedTransition : transitions.expressive} vectorEffect="non-scaling-stroke" />
         </svg>
         <motion.span className="absolute inset-[16%] rounded-full bg-[radial-gradient(circle_at_38%_30%,rgba(255,255,255,.92),rgba(220,239,233,.38)_44%,rgba(230,224,237,.22)_70%,transparent)]" animate={holding && !reducedMotion ? { rotate: progress * 180, filter: `blur(${2 + progress * 5}px)` } : { rotate: 0, filter: "blur(1px)" }} />
-        <span className="relative grid gap-2 text-center">
-          <CalendarDays className="mx-auto h-5 w-5 transition-colors duration-[var(--motion-expressive)] group-hover:text-memory-electric" />
-          <span className="max-w-20 text-[10px] font-medium uppercase leading-4 tracking-[0.16em] sm:text-[11px]">Calendario público</span>
-          <span className="text-[8px] uppercase tracking-[0.14em] text-text-muted">{holding ? `${Math.ceil((1 - progress) * 5)} s` : reducedMotion ? "Abrir" : "Mantener"}</span>
+        <span className="relative grid place-items-center">
+          <CalendarDays className="h-7 w-7 stroke-[1.15] transition-colors duration-[var(--motion-expressive)] group-hover:text-memory-electric group-focus-visible:text-memory-electric" />
         </span>
         <motion.span aria-hidden="true" className="absolute left-1/2 top-1/2 h-px origin-left bg-memory-electric" style={{ width: `${22 + progress * 46}%` }} animate={{ rotate: holding ? 300 + progress * 480 : 24, opacity: holding ? 0.82 : 0.36 }} transition={{ duration: 0.18 }} />
       </motion.button>
-      <p id="public-calendar-instruction" className="mt-4 max-w-48 text-center text-[10px] leading-4 text-text-muted">{reducedMotion ? "Activa para abrir." : "Mantén presionado durante 5 segundos."}</p>
+      <p id="public-calendar-instruction" className="sr-only">{reducedMotion ? "Activa para abrir el calendario público." : "Mantén presionado cinco segundos para abrir el calendario público."}</p>
     </div>
   );
 }
