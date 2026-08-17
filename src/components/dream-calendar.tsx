@@ -95,6 +95,7 @@ export function DreamCalendar() {
   const [confirmReset, setConfirmReset] = React.useState(false);
   const [previewDate, setPreviewDate] = React.useState<string | null>(null);
   const previousDreamRef = React.useRef<string | null>(null);
+  const toastTimerRef = React.useRef<number | null>(null);
 
   const currentMonth = monthFromKey(searchParams.get("month")) ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const currentMonthKey = keyForMonth(currentMonth);
@@ -146,11 +147,24 @@ export function DreamCalendar() {
     }
   }, [selectedDream]);
 
-  React.useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), 6000);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
+  React.useEffect(() => () => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+  }, []);
+
+  function showToast(nextToast: Exclude<Toast, null>) {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    setToast(nextToast);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 6000);
+  }
+
+  function dismissToast() {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = null;
+    setToast(null);
+  }
 
   function moveMonth(amount: number) {
     const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + amount, 1);
@@ -171,7 +185,7 @@ export function DreamCalendar() {
 
   function handleSaved(dream: Dream) {
     setHighlightedId(dream.id);
-    setToast({ dream, kind: "saved" });
+    showToast({ dream, kind: "saved" });
     router.replace(`/calendar?month=${monthKeyForDate(dream.date)}`, { scroll: false });
     window.setTimeout(() => setHighlightedId(null), 1800);
   }
@@ -179,7 +193,7 @@ export function DreamCalendar() {
   function handleDelete(dream: Dream) {
     const removed = removeDream(dream.id);
     if (!removed) return;
-    setToast({ dream: removed, kind: "deleted" });
+    showToast({ dream: removed, kind: "deleted" });
     closeFocus();
   }
 
@@ -295,7 +309,7 @@ export function DreamCalendar() {
           {toast ? (
             <motion.div role="status" aria-live="polite" initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }} animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={reducedMotion ? reducedTransition : transitions.standard} className="material-frost fixed bottom-5 left-4 z-feedback max-w-[min(27rem,calc(100vw-2rem))] rounded-[20px] p-4 sm:bottom-7 sm:left-7">
               <p className="text-sm leading-6 text-text-secondary">{toast.kind === "saved" ? "Registro guardado." : "Registro eliminado."}</p>
-              {toast.kind === "deleted" ? <button type="button" className="mt-2 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-text-primary underline-offset-4 hover:underline" onClick={() => { restoreDream(toast.dream); setToast(null); }}><ArrowLeft className="h-3.5 w-3.5" />Deshacer</button> : null}
+              {toast.kind === "deleted" ? <button type="button" className="mt-2 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-text-primary underline-offset-4 hover:underline" onClick={() => { restoreDream(toast.dream); dismissToast(); }}><ArrowLeft className="h-3.5 w-3.5" />Deshacer</button> : null}
             </motion.div>
           ) : null}
         </AnimatePresence>
