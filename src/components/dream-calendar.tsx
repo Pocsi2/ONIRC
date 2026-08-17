@@ -218,11 +218,11 @@ export function DreamCalendar() {
                   const left = 50 + Math.cos(angle) * 45;
                   const top = 50 + Math.sin(angle) * 45;
                   return (
-                    <li key={date} className="orbit-day absolute" style={{ left: `${left}%`, top: `${top}%` }}>
+                    <li key={date} className={cn("orbit-day pointer-events-none absolute", hasDreams && "z-calendar")} style={{ left: `${left}%`, top: `${top}%` }}>
                       <button
                         id={dayDreams.length === 1 ? `dream-pearl-${dayDreams[0].id}` : undefined}
                         type="button"
-                        className={cn("group relative grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-[9px] font-medium transition-transform sm:h-11 sm:w-11 sm:text-[11px]", hasDreams ? "text-text-primary hover:scale-110" : "text-text-muted hover:text-text-primary", isToday && "after:absolute after:-bottom-0.5 after:h-px after:w-4 after:bg-memory-electric")}
+                        className={cn("pointer-events-auto group relative grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-[9px] font-medium transition-transform sm:h-11 sm:w-11 sm:text-[11px]", hasDreams ? "text-text-primary hover:scale-110" : "text-text-muted hover:text-text-primary", isToday && "after:absolute after:-bottom-0.5 after:h-px after:w-4 after:bg-memory-electric")}
                         aria-label={hasDreams ? dayDreams.length === 1 ? `Abrir sueño: ${dayDreams[0].title}, ${formatDreamDate(date)}` : `Abrir ${dayDreams.length} sueños del ${formatDreamDate(date)}` : `${formatDreamDate(date)}, sin sueños`}
                         onPointerEnter={() => setPreviewDate(date)}
                         onPointerLeave={() => setPreviewDate(null)}
