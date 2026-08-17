@@ -17,19 +17,19 @@ export function HomeExperience() {
         transition={reducedMotion ? reducedTransition : transitions.expressive}
         className="max-w-4xl"
       >
-        <p className="text-xs font-medium uppercase tracking-[0.3em] text-text-muted">Archivo personal de sueños</p>
+        <p className="text-xs font-medium uppercase tracking-[0.3em] text-text-muted">Registro de sueños</p>
         <h1 className="mt-7 font-display text-balance text-[clamp(4.4rem,10.5vw,9.6rem)] leading-[.83] tracking-[-0.065em] text-text-primary">
-          Lo que recuerdas<br />tiene un lugar.
+          Guarda lo<br />que soñaste.
         </h1>
         <p className="mt-8 max-w-xl text-lg leading-8 text-text-secondary sm:text-xl sm:leading-9">
-          Onirc convierte los fragmentos de la noche en puntos de luz para volver a ellos con calma.
+          Escribe, guarda y consulta tus sueños.
         </p>
         <div className="mt-10 flex flex-col items-start gap-4">
           <ViewTransitionLink href="/calendar" className="surface-pearl inline-flex min-h-12 items-center justify-center gap-2 rounded-[18px] px-5 text-sm font-medium transition hover:-translate-y-0.5 hover:shadow-float">
-            Entrar al calendario <ArrowRight className="h-4 w-4" />
+            Abrir calendario <ArrowRight className="h-4 w-4" />
           </ViewTransitionLink>
           <p className="flex max-w-md items-start gap-2 text-sm leading-6 text-text-muted">
-            <LockKeyhole className="mt-1 h-4 w-4 shrink-0" /> Se guarda primero sólo en este navegador. Tú decides si más tarde creas una copia privada.
+            <LockKeyhole className="mt-1 h-4 w-4 shrink-0" /> Guardado en este dispositivo. La copia privada es opcional.
           </p>
         </div>
       </motion.section>
@@ -48,9 +48,6 @@ export function HomeExperience() {
         </div>
         <span className="absolute left-[13%] top-[33%] h-2 w-2 rounded-full bg-mist-champagne/80" />
         <span className="absolute bottom-[18%] right-[17%] h-3 w-3 rounded-full bg-mist-lavender/80" />
-        <figcaption className="absolute inset-x-0 bottom-2 text-center text-xs uppercase tracking-[0.26em] text-text-muted">
-          Un punto en el tiempo
-        </figcaption>
       </motion.figure>
     </PageTransition>
   );

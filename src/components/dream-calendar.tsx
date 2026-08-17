@@ -150,10 +150,10 @@ export function DreamCalendar() {
           <div className="mx-auto max-w-[1160px]">
             <header className="mb-10 flex flex-col gap-7 border-b border-[var(--border-quiet)] pb-7 sm:mb-14 sm:flex-row sm:items-end sm:justify-between sm:pb-9">
               <div className="max-w-3xl">
-                <p className="text-xs font-medium uppercase tracking-[0.3em] text-text-muted">Paisaje temporal</p>
+                <p className="text-xs font-medium uppercase tracking-[0.3em] text-text-muted">Calendario</p>
                 <h1 className="mt-4 font-display text-balance text-[clamp(3.9rem,8vw,7.7rem)] leading-[.86] tracking-[-0.06em]">{monthLabel(currentMonth)}</h1>
                 <p className="mt-5 max-w-xl text-sm leading-6 text-text-secondary">
-                  {cloud.status === "synced" ? "Las perlas son recuerdos que viven aquí y en tu copia privada." : "Las perlas son recuerdos que por ahora sólo viven aquí."}
+                  {cloud.status === "synced" ? "Sincronizado con tu cuenta." : "Guardado en este dispositivo."}
                 </p>
                 {persistence.message ? <p role="status" aria-live="polite" className={cn("mt-3 text-sm leading-6", persistence.kind === "warning" ? "text-memory-accessible" : "text-text-muted")}>{persistence.message}</p> : null}
                 <CloudSyncControl />
@@ -207,21 +207,21 @@ export function DreamCalendar() {
               </div>
               {isMonthEmpty ? (
                 <div className="mx-auto max-w-md py-12 text-center sm:py-16">
-                  <p className="font-display text-4xl leading-none tracking-[-0.04em]">{isCalendarEmpty ? "Aquí empieza el tiempo." : "Este mes todavía guarda silencio."}</p>
-                  <p className="mt-4 text-sm leading-6 text-text-secondary">{isCalendarEmpty ? "Cuando una noche vuelva contigo, déjala vivir como una primera perla." : "Puedes volver a otro mes o registrar un sueño que ya recuerdes."}</p>
+                  <p className="font-display text-4xl leading-none tracking-[-0.04em]">{isCalendarEmpty ? "No hay sueños todavía." : "Sin registros este mes."}</p>
+                  <p className="mt-4 text-sm leading-6 text-text-secondary">{isCalendarEmpty ? "Añade el primero cuando quieras." : "Puedes cambiar de mes o registrar un sueño."}</p>
                 </div>
               ) : null}
             </section>
 
             <footer className="mt-10 flex flex-col gap-4 border-t border-[var(--border-quiet)] pt-6 text-sm text-text-muted sm:flex-row sm:items-center sm:justify-between">
-              <p>{cloud.status === "synced" ? "Tu copia privada se sincroniza únicamente con tu cuenta." : "Este espacio no sincroniza tus recuerdos ni los comparte."}</p>
+              <p>{cloud.status === "synced" ? "Sincronizado de forma privada con tu cuenta." : "Este dispositivo guarda tus sueños localmente."}</p>
               {confirmReset ? (
                 <span className="flex flex-wrap items-center gap-2 text-text-secondary">
-                  <span>¿Dejar el calendario local en blanco?</span>
+                  <span>¿Borrar todos los sueños locales?</span>
                   <Button size="sm" variant="secondary" onClick={() => { resetDreams(); setConfirmReset(false); }}>Sí, borrar datos</Button>
                   <button type="button" className="min-h-9 px-2 text-xs underline-offset-4 hover:underline" onClick={() => setConfirmReset(false)}>Cancelar</button>
                 </span>
-              ) : <button type="button" className="inline-flex min-h-10 items-center gap-2 self-start text-sm underline-offset-4 hover:underline sm:self-auto" onClick={() => setConfirmReset(true)}><RotateCcw className="h-3.5 w-3.5" />Reiniciar datos locales</button>}
+              ) : <button type="button" className="inline-flex min-h-10 items-center gap-2 self-start text-sm underline-offset-4 hover:underline sm:self-auto" onClick={() => setConfirmReset(true)}><RotateCcw className="h-3.5 w-3.5" />Borrar datos locales</button>}
             </footer>
           </div>
         </motion.div>
@@ -238,7 +238,7 @@ export function DreamCalendar() {
         <AnimatePresence>
           {toast ? (
             <motion.div role="status" aria-live="polite" initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }} animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={reducedMotion ? reducedTransition : transitions.standard} className="material-frost fixed bottom-5 left-4 z-feedback max-w-[min(27rem,calc(100vw-2rem))] rounded-[20px] p-4 sm:bottom-7 sm:left-7">
-              <p className="text-sm leading-6 text-text-secondary">{toast.kind === "saved" ? `“${toast.dream.title}” ya vive en tu calendario.` : `“${toast.dream.title}” salió del calendario.`}</p>
+              <p className="text-sm leading-6 text-text-secondary">{toast.kind === "saved" ? "Registro guardado." : "Registro eliminado."}</p>
               {toast.kind === "deleted" ? <button type="button" className="mt-2 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-text-primary underline-offset-4 hover:underline" onClick={() => { restoreDream(toast.dream); setToast(null); }}><ArrowLeft className="h-3.5 w-3.5" />Deshacer</button> : null}
             </motion.div>
           ) : null}

@@ -22,7 +22,7 @@ export function DreamCollection({ date, dreams, onBack, onSelect }: { date: stri
         <button ref={backRef} type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-2 rounded-[14px] px-2 text-sm text-text-secondary transition-colors hover:text-text-primary"><ArrowLeft className="h-4 w-4" />Volver al calendario</button>
         <div className="mt-7">
           <p className="text-sm text-text-muted">{formatDreamDate(date)}</p>
-          <h2 className="mt-3 font-display text-[clamp(3.4rem,7vw,6rem)] leading-[.86] tracking-[-0.055em]">{dreams.length} recuerdos<br />en un día.</h2>
+          <h2 className="mt-3 font-display text-[clamp(3.4rem,7vw,6rem)] leading-[.86] tracking-[-0.055em]">{dreams.length} sueños<br />ese día.</h2>
           <div className="mt-10 border-y border-[var(--border-quiet)]">
             {dreams.map((dream) => (
               <button key={dream.id} type="button" className="group flex w-full items-center gap-5 border-b border-[var(--border-quiet)] py-6 text-left last:border-b-0" onClick={() => onSelect(dream)} aria-label={`Abrir sueño: ${dream.title}`}>

@@ -6,9 +6,9 @@ import { useTheme, type ThemePreference } from "@/lib/theme-store";
 import { cn } from "@/lib/utils";
 
 const options: Array<{ value: ThemePreference; label: string; icon: typeof Sun; description: string }> = [
-  { value: "system", label: "Sistema", icon: Monitor, description: "Sigue la apariencia de este dispositivo." },
-  { value: "day", label: "Día", icon: Sun, description: "Luz perla para leer con claridad." },
-  { value: "night", label: "Noche cálida", icon: Moon, description: "Menos azul, más calma." },
+  { value: "system", label: "Sistema", icon: Monitor, description: "Usa el ajuste del dispositivo." },
+  { value: "day", label: "Claro", icon: Sun, description: "Tema claro." },
+  { value: "night", label: "Oscuro cálido", icon: Moon, description: "Reduce la luz azul." },
 ];
 
 export function ThemeControl() {
@@ -33,18 +33,18 @@ export function ThemeControl() {
         ref={triggerRef}
         type="button"
         className="material-button inline-flex min-h-11 items-center gap-2 rounded-[16px] px-3 text-sm"
-        aria-label="Elegir apariencia"
+        aria-label="Elegir tema"
         aria-expanded={isOpen}
         aria-controls={panelId}
         onClick={() => setIsOpen((current) => !current)}
       >
         <Palette className="h-4 w-4" />
-        <span className="hidden sm:inline">Apariencia</span>
+        <span className="hidden sm:inline">Tema</span>
       </button>
       {isOpen ? (
-        <div id={panelId} className="surface-frost absolute right-0 top-[calc(100%+0.75rem)] z-feedback w-72 rounded-[24px] p-2" role="dialog" aria-label="Apariencia">
-          <p className="px-3 pb-2 pt-2 text-xs font-medium uppercase tracking-[0.2em] text-text-muted">Apariencia</p>
-          <div role="radiogroup" aria-label="Elegir apariencia" className="space-y-1">
+        <div id={panelId} className="surface-frost absolute right-0 top-[calc(100%+0.75rem)] z-feedback w-72 rounded-[24px] p-2" role="dialog" aria-label="Tema">
+          <p className="px-3 pb-2 pt-2 text-xs font-medium uppercase tracking-[0.2em] text-text-muted">Tema</p>
+          <div role="radiogroup" aria-label="Elegir tema" className="space-y-1">
             {options.map((option) => {
               const Icon = option.icon;
               const active = preference === option.value;

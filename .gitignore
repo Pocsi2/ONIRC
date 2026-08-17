@@ -20,6 +20,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+llavegit.txt
+.onirc-git-probe/
 
 # Local browser/debug artifacts from repo setup and QA
 browser-*.json

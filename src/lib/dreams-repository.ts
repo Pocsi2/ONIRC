@@ -29,7 +29,7 @@ function preserveUnreadableValue(key: string, value: string) {
 
 export function loadDreams(): LoadResult {
   if (!storageAvailable()) {
-    return { dreams: [], status: { kind: "warning", message: "Este navegador no permite guardar recuerdos de forma duradera." } };
+    return { dreams: [], status: { kind: "warning", message: "Este navegador no permite guardar datos de forma duradera." } };
   }
 
   const keys = [STORAGE_KEY, ...LEGACY_KEYS];
@@ -40,18 +40,18 @@ export function loadDreams(): LoadResult {
       const parsed = parsePersistedDreams(JSON.parse(raw));
       if (!parsed) {
         preserveUnreadableValue(key, raw);
-        return { dreams: [], status: { kind: "warning", message: "Una copia anterior se guardó para revisión y se abrió un calendario vacío." } };
+        return { dreams: [], status: { kind: "warning", message: "Se detectaron datos no válidos. Se abrió un calendario vacío." } };
       }
       if (parsed.migrated || key !== STORAGE_KEY) saveDreams(parsed.dreams);
       return {
         dreams: parsed.dreams,
         status: parsed.migrated || key !== STORAGE_KEY
-          ? { kind: "ready", message: "Tus recuerdos locales se actualizaron con cuidado." }
+          ? { kind: "ready", message: "Los datos locales se actualizaron." }
           : { kind: "ready" },
       };
     } catch {
       preserveUnreadableValue(key, raw);
-      return { dreams: [], status: { kind: "warning", message: "Una copia anterior se guardó para revisión y se abrió un calendario vacío." } };
+      return { dreams: [], status: { kind: "warning", message: "Se detectaron datos no válidos. Se abrió un calendario vacío." } };
     }
   }
 
@@ -64,7 +64,7 @@ export function saveDreams(dreams: Dream[]): PersistenceStatus {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeDreams(dreams)));
     return { kind: "ready" };
   } catch {
-    return { kind: "warning", message: "Este navegador no pudo guardar más recuerdos localmente." };
+    return { kind: "warning", message: "Este navegador no pudo guardar más datos localmente." };
   }
 }
 

@@ -3,8 +3,8 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Onirc — Diario de sueños local",
-  description: "Un calendario íntimo para recordar lo que soñaste, guardado sólo en este navegador.",
+  title: "Onirc — Registro de sueños",
+  description: "Escribe, guarda y consulta tus sueños.",
 };
 
 export const viewport: Viewport = {

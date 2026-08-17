@@ -19,9 +19,9 @@ export function CloudSyncControl() {
     <section className="mt-5 flex max-w-xl flex-col gap-3 border-t border-[var(--border-quiet)] pt-4 sm:flex-row sm:items-center sm:justify-between" aria-label="Copia privada">
       <div className="flex min-w-0 items-start gap-3">
         <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${isSyncing ? "animate-spin" : ""} ${cloud.status === "error" ? "text-memory-accessible" : "text-text-secondary"}`} aria-hidden="true" />
-        <p role="status" aria-live="polite" className="text-sm leading-6 text-text-secondary">{cloud.message ?? "Tu cuenta está lista para una copia privada."}</p>
+        <p role="status" aria-live="polite" className="text-sm leading-6 text-text-secondary">{cloud.message ?? "Sincroniza tus datos entre dispositivos."}</p>
       </div>
-      {isSynced ? <span className="shrink-0 text-xs font-medium uppercase tracking-[0.16em] text-text-muted">Privada</span> : (
+      {isSynced ? <span className="shrink-0 text-xs font-medium uppercase tracking-[0.16em] text-text-muted">Sincronizado</span> : (
         <Button variant="secondary" size="sm" className="shrink-0" onClick={() => void synchronizeWithCloud()} disabled={isSyncing}>
           {isSyncing ? "Sincronizando…" : cloud.status === "error" ? "Reintentar" : "Sincronizar"}
         </Button>

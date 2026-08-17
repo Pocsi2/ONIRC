@@ -91,7 +91,7 @@ export function AuthControl() {
         <span className="hidden max-w-28 truncate text-xs text-text-muted md:inline">{name}</span>
         <Button variant="ghost" size="sm" className="min-h-11 rounded-[16px] px-3" onClick={leaveAccount} disabled={pending === "sign-out"} aria-label="Cerrar sesión">
           <LogOut className="h-4 w-4" />
-          <span className="hidden lg:inline">Salir</span>
+          <span className="hidden lg:inline">Cerrar sesión</span>
         </Button>
       </div>
     );
@@ -99,9 +99,9 @@ export function AuthControl() {
 
   return (
     <>
-      <Button variant="secondary" size="sm" className="min-h-11 rounded-[16px] px-3" onClick={openAccess} aria-label="Ingresar a tu cuenta">
+      <Button variant="secondary" size="sm" className="min-h-11 rounded-[16px] px-3" onClick={openAccess} aria-label="Iniciar sesión">
         <LogIn className="h-4 w-4" />
-        <span className="hidden sm:inline">Ingresar</span>
+        <span className="hidden sm:inline">Iniciar sesión</span>
       </Button>
 
       <AnimatePresence>
@@ -110,14 +110,14 @@ export function AuthControl() {
             <motion.section role="dialog" aria-modal="true" aria-labelledby="auth-title" className="surface-opal w-full max-w-md rounded-[32px] p-6 sm:p-8" initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18, scale: 0.98 }} animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }} exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.99 }} transition={reducedMotion ? reducedTransition : transitions.expressive} onMouseDown={(event) => event.stopPropagation()}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-text-muted">Cuenta Onirc</p>
-                  <h2 id="auth-title" className="mt-2 font-display text-4xl tracking-[-0.04em] text-text-primary">{mode === "sign-in" ? "Vuelve a tus recuerdos." : "Dales un lugar propio."}</h2>
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-text-muted">Cuenta</p>
+                  <h2 id="auth-title" className="mt-2 font-display text-4xl tracking-[-0.04em] text-text-primary">{mode === "sign-in" ? "Accede a tu cuenta." : "Crea una cuenta."}</h2>
                 </div>
                 <button type="button" className="material-button grid min-h-11 min-w-11 place-items-center rounded-[16px]" onClick={close} aria-label="Cerrar acceso" disabled={Boolean(pending)}><X className="h-4 w-4" /></button>
               </div>
 
-              <p className="mt-4 text-sm leading-6 text-text-secondary">Verifica tu cuenta para poder crear una copia privada. Tú decides cuándo sincronizar tus recuerdos.</p>
-              <Button type="button" variant="secondary" className="mt-6 w-full" onClick={useGoogle} disabled={Boolean(pending)}><Chrome className="h-4 w-4" />{pending === "google" ? "Abriendo Google…" : "Continuar con Google"}</Button>
+              <p className="mt-4 text-sm leading-6 text-text-secondary">Inicia sesión para sincronizar tus datos entre dispositivos.</p>
+              <Button type="button" variant="secondary" className="mt-6 w-full" onClick={useGoogle} disabled={Boolean(pending)}><Chrome className="h-4 w-4" />{pending === "google" ? "Abriendo Google…" : "Iniciar sesión con Google"}</Button>
               <div className="my-5 flex items-center gap-3 text-xs text-text-muted"><span className="h-px flex-1 bg-[var(--border-light)]" /> o con correo <span className="h-px flex-1 bg-[var(--border-light)]" /></div>
 
               <form className="space-y-4" onSubmit={submitEmail}>

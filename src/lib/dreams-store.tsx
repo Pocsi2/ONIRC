@@ -112,10 +112,10 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
       void import("@/lib/cloud-dreams")
         .then(({ loadPublicName }) => loadPublicName(user.uid))
         .then((publicName) => {
-          if (active) setCloud({ status: "ready", publicName, message: "Tu cuenta está lista. Tus recuerdos aún permanecen sólo en este navegador." });
+          if (active) setCloud({ status: "ready", publicName, message: "Cuenta lista. Los datos siguen en este dispositivo." });
         })
         .catch(() => {
-          if (active) setCloud({ status: "ready", message: "Tu cuenta está lista. Tus recuerdos aún permanecen sólo en este navegador." });
+          if (active) setCloud({ status: "ready", message: "Cuenta lista. Los datos siguen en este dispositivo." });
         });
     }, 0);
 
@@ -140,22 +140,22 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
         (cloudDreams) => {
           const local = getClientSnapshot().dreams;
           setState({ ...getClientSnapshot(), dreams: cloudDreams, persistence: saveDreams(cloudDreams), isReady: true });
-          if (local.length !== cloudDreams.length) setCloud((currentCloud) => ({ ...currentCloud, status: "synced", message: "Tus recuerdos están sincronizados de forma privada." }));
+          if (local.length !== cloudDreams.length) setCloud((currentCloud) => ({ ...currentCloud, status: "synced", message: "Datos sincronizados de forma privada." }));
         },
-        () => setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No se pudo actualizar la copia privada. Tus recuerdos locales siguen a salvo." })),
+        () => setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No se pudo actualizar la copia privada. Los datos locales siguen disponibles." })),
       ))
       .then((unsubscribe) => {
         if (subscriptionTokenRef.current === token) unsubscribeCloudRef.current = unsubscribe;
         else unsubscribe();
       })
       .catch(() => {
-        if (subscriptionTokenRef.current === token) setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No se pudo actualizar la copia privada. Tus recuerdos locales siguen a salvo." }));
+        if (subscriptionTokenRef.current === token) setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No se pudo actualizar la copia privada. Los datos locales siguen disponibles." }));
       });
   }, []);
 
   const synchronizeWithCloud = React.useCallback(async () => {
     if (!user) return;
-    setCloud((currentCloud) => ({ ...currentCloud, status: "syncing", message: "Uniendo tus copias con cuidado…" }));
+    setCloud((currentCloud) => ({ ...currentCloud, status: "syncing", message: "Sincronizando datos…" }));
     try {
       const { synchronizeDreams } = await import("@/lib/cloud-dreams");
       const result = await synchronizeDreams(user.uid, getClientSnapshot().dreams);
@@ -165,11 +165,11 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
         status: "synced",
         publicName: cloud.publicName,
         message: result.conflicts
-          ? `Tus recuerdos están sincronizados. Conservamos ${result.conflicts} copia${result.conflicts === 1 ? "" : "s"} para no perder versiones distintas.`
-          : "Tus recuerdos están sincronizados de forma privada.",
+          ? `Datos sincronizados. Se detectaron ${result.conflicts} versión${result.conflicts === 1 ? "" : "es"} distinta${result.conflicts === 1 ? "" : "s"}.`
+          : "Datos sincronizados de forma privada.",
       });
     } catch {
-      setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No fue posible sincronizar ahora. Tus recuerdos locales siguen a salvo." }));
+      setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No se pudo sincronizar. Los datos locales siguen disponibles." }));
     }
   }, [beginCloudSubscription, cloud.publicName, user]);
 
@@ -180,7 +180,7 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
     if (user && cloud.status === "synced") {
       void import("@/lib/cloud-dreams")
         .then(({ saveDreamToCloud }) => saveDreamToCloud(user.uid, dream))
-        .catch(() => setCloud({ status: "error", message: "Este recuerdo quedó localmente; la copia privada no pudo actualizarse." }));
+        .catch(() => setCloud({ status: "error", message: "El sueño quedó guardado localmente; la copia privada no se actualizó." }));
     }
     return dream;
   }, [cloud.status, user]);
@@ -195,7 +195,7 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
     if (user && cloud.status === "synced") {
       void import("@/lib/cloud-dreams")
         .then(({ saveDreamToCloud }) => saveDreamToCloud(user.uid, updated))
-        .catch(() => setCloud({ status: "error", message: "El cambio quedó localmente; la copia privada no pudo actualizarse." }));
+        .catch(() => setCloud({ status: "error", message: "El cambio quedó guardado localmente; la copia privada no se actualizó." }));
     }
     return updated;
   }, [cloud.status, user]);
@@ -214,7 +214,7 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
         }
         const { deleteDreamFromCloud } = await import("@/lib/cloud-dreams");
         await deleteDreamFromCloud(user.uid, id);
-      })().catch(() => setCloud({ status: "error", message: "El borrado quedó localmente; la copia privada no pudo actualizarse." }));
+      })().catch(() => setCloud({ status: "error", message: "El borrado se aplicó localmente; la copia privada no se actualizó." }));
     }
     return current;
   }, [cloud.status, user]);
@@ -231,7 +231,7 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
     if (user && cloud.status === "synced") {
       void import("@/lib/cloud-dreams")
         .then(({ saveDreamToCloud }) => saveDreamToCloud(user.uid, restored))
-        .catch(() => setCloud({ status: "error", message: "La restauración quedó localmente; la copia privada no pudo actualizarse." }));
+        .catch(() => setCloud({ status: "error", message: "La restauración se aplicó localmente; la copia privada no se actualizó." }));
     }
   }, [cloud.status, user]);
 
@@ -251,7 +251,7 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
       setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
       setCloud((currentCloud) => ({ ...currentCloud, publicName: cleanName }));
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No fue posible compartir este recuerdo. Sigue siendo privado.";
+      const message = error instanceof Error ? error.message : "No se pudo publicar el sueño. Sigue siendo privado.";
       setCloud((currentCloud) => ({ ...currentCloud, status: "error", message }));
       throw error;
     }
@@ -270,7 +270,7 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
       const dreams = snapshot.dreams.map((dream) => dream.id === id ? privateDream : dream);
       setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No fue posible retirar la publicación. El recuerdo sigue público hasta que se confirme el cambio.";
+      const message = error instanceof Error ? error.message : "No se pudo retirar la publicación. El sueño sigue público hasta que se confirme el cambio.";
       setCloud((currentCloud) => ({ ...currentCloud, status: "error", message }));
       throw error;
     }
@@ -278,7 +278,7 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
 
   const resetDreams = React.useCallback(() => {
     clearAllLocalDreams();
-    setState({ dreams: [], savedDraft: null, isReady: true, persistence: { kind: "ready", message: "El calendario local quedó en blanco." } });
+    setState({ dreams: [], savedDraft: null, isReady: true, persistence: { kind: "ready", message: "Datos locales borrados." } });
   }, []);
 
   const saveLocalDraft = React.useCallback((draft: DreamDraft) => {
