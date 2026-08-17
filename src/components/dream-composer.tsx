@@ -123,7 +123,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
   const sheetAnimate = reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 };
 
   return (
-    <motion.div className="fixed inset-0 z-feedback flex items-end bg-[rgba(36,30,27,.16)] p-0 sm:items-center sm:justify-center sm:p-6 [html[data-theme=night]_&]:bg-black/42" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={reducedMotion ? reducedTransition : transitions.standard}>
+    <motion.div className="fixed inset-0 z-feedback flex items-end bg-[rgba(36,30,27,.16)] p-0 sm:items-center sm:justify-center sm:p-6 [html[data-theme=night]_&]:bg-black/42" initial={{ opacity: 0 }} animate={{ opacity: 1, pointerEvents: "auto" }} exit={{ opacity: 0, pointerEvents: "none" }} transition={reducedMotion ? reducedTransition : transitions.standard}>
       <motion.div
         ref={dialogRef}
         role="dialog"
