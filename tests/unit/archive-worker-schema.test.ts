@@ -44,6 +44,19 @@ describe("public archive Worker schema", () => {
     expect(decodePrivateDream({ ...source, date: "2026-02-30" })).toBeNull();
   });
 
+  it("never projects the private EEG/MRI reference", () => {
+    const privateMemory = { ...source, neuroFileUrl: "https://example.test/studies/mri-42" };
+    const projection = buildSafeProjection(
+      "p_4a82b1150a37484f9c87f1a3d3aa7777",
+      privateMemory,
+      "Marea quieta",
+      "2026-08-14T12:00:00.000Z",
+    );
+
+    expect(projection).not.toHaveProperty("neuroFileUrl");
+    expect(isSafePublicProjection(projection)).toBe(true);
+  });
+
   it("keeps the signature intentionally pseudonymous and bounded", () => {
     expect(normalizePseudonym("  Marea   quieta ")).toBe("Marea quieta");
     expect(normalizePseudonym("x")).toBeNull();

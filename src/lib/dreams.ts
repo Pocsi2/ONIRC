@@ -12,13 +12,28 @@ export type Dream = {
   createdAt: string;
   updatedAt: string;
   visibility?: DreamVisibility;
+  neuroFileUrl?: string;
 };
 
-export type DreamDraft = Pick<Dream, "date" | "title" | "body">;
+export type DreamDraft = Pick<Dream, "date" | "title" | "body" | "neuroFileUrl">;
 
 export type SavedDraft = DreamDraft & {
   updatedAt: string;
 };
+
+export function normalizeNeuroFileUrl(value: unknown) {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value !== "string") return null;
+  const clean = value.trim();
+  if (!clean) return undefined;
+  if (clean.length > 2_048) return null;
+  try {
+    const url = new URL(clean);
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
 
 const calendarLocale = "es-GT";
 

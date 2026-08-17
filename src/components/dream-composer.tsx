@@ -1,14 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Check, Feather, X } from "lucide-react";
+import { Check, Feather, Globe2, Link2, LockKeyhole, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { Dream, DreamDraft } from "@/lib/dreams";
-import { todayIso } from "@/lib/dreams";
+import { normalizeNeuroFileUrl, todayIso, type DreamVisibility } from "@/lib/dreams";
 import { useDreamStore } from "@/lib/dreams-store";
+import { isPublicArchiveAvailable } from "@/lib/archive-state";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
 type ComposerProps = {
@@ -19,13 +20,15 @@ type ComposerProps = {
   onSaved: (dream: Dream) => void;
 };
 
+const publicPseudonymPattern = /^[\p{L}\p{N}][\p{L}\p{N} '’.-]*$/u;
+
 function focusableElements(container: HTMLElement) {
   return Array.from(container.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'));
 }
 
 export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: ComposerProps) {
   const reducedMotion = useReducedMotion();
-  const { addDream, updateDream, savedDraft, saveLocalDraft, clearLocalDraft, cloud } = useDreamStore();
+  const { addDream, updateDream, savedDraft, saveLocalDraft, clearLocalDraft, cloud, publishDream, makeDreamPrivate } = useDreamStore();
   const isEdit = mode === "edit" && Boolean(dream);
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const bodyRef = React.useRef<HTMLTextAreaElement>(null);
@@ -34,7 +37,12 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
   const [date, setDate] = React.useState(initialDate);
   const [title, setTitle] = React.useState("");
   const [body, setBody] = React.useState("");
+  const [neuroFileUrl, setNeuroFileUrl] = React.useState("");
+  const [showNeuroLink, setShowNeuroLink] = React.useState(false);
+  const [visibility, setVisibility] = React.useState<DreamVisibility>("private");
+  const [pseudonym, setPseudonym] = React.useState(cloud.publicName ?? "");
   const [error, setError] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
   const [isDirty, setIsDirty] = React.useState(false);
   const [confirmDiscard, setConfirmDiscard] = React.useState(false);
   const hasNarrative = body.trim().length > 0;
@@ -45,16 +53,20 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
     setDate(source?.date ?? initialDate);
     setTitle(source?.title ?? "");
     setBody(source?.body ?? "");
+    setNeuroFileUrl(source?.neuroFileUrl ?? "");
+    setShowNeuroLink(Boolean(source?.neuroFileUrl));
+    setVisibility(isEdit && dream?.visibility === "public" ? "public" : "private");
+    setPseudonym(cloud.publicName ?? "");
     setError("");
     setIsDirty(false);
     window.setTimeout(() => bodyRef.current?.focus(), 40);
-  }, [dream, initialDate, isEdit]);
+  }, [cloud.publicName, dream, initialDate, isEdit]);
 
   React.useEffect(() => {
     if (isEdit || !isDirty) return;
-    const timer = window.setTimeout(() => saveLocalDraft({ date, title, body }), 280);
+    const timer = window.setTimeout(() => saveLocalDraft({ date, title, body, neuroFileUrl }), 280);
     return () => window.clearTimeout(timer);
-  }, [body, date, isDirty, isEdit, saveLocalDraft, title]);
+  }, [body, date, isDirty, isEdit, neuroFileUrl, saveLocalDraft, title]);
 
   function updateField(setter: React.Dispatch<React.SetStateAction<string>>, value: string) {
     setter(value);
@@ -90,7 +102,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
     }
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanTitle = title.trim();
     const cleanBody = body.trim();
@@ -108,14 +120,44 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
       setError("No se permiten fechas futuras.");
       return;
     }
-    const draft: DreamDraft = { date, title: cleanTitle, body: cleanBody };
+    const normalizedNeuroUrl = normalizeNeuroFileUrl(neuroFileUrl);
+    if (normalizedNeuroUrl === null) {
+      setError("El enlace EEG/MRI debe ser una URL segura que empiece con https://");
+      return;
+    }
+    const cleanPseudonym = pseudonym.trim().replace(/\s+/g, " ");
+    if (visibility === "public") {
+      if (!isPublicArchiveAvailable || cloud.status !== "synced") {
+        setError("Inicia sesión y sincroniza tu cuenta antes de hacerlo público.");
+        return;
+      }
+      if (cleanPseudonym.length < 2 || cleanPseudonym.length > 32) {
+        setError("Elige un seudónimo público de 2 a 32 caracteres.");
+        return;
+      }
+      if (!publicPseudonymPattern.test(cleanPseudonym)) {
+        setError("El seudónimo sólo puede usar letras, números, espacios, guiones, puntos o apóstrofes.");
+        return;
+      }
+    }
+    const draft: DreamDraft = { date, title: cleanTitle, body: cleanBody, neuroFileUrl: normalizedNeuroUrl };
+    setSaving(true);
     const saved = isEdit && dream ? updateDream(dream.id, draft) : addDream(draft);
     if (!saved) {
       setError("Registro no encontrado.");
+      setSaving(false);
       return;
+    }
+    try {
+      if (visibility === "public" && saved.visibility !== "public") await publishDream(saved.id, cleanPseudonym);
+      if (visibility === "private" && saved.visibility === "public") await makeDreamPrivate(saved.id);
+    } catch {
+      // The private source is already preserved. The store exposes the precise
+      // cloud error and the detail view remains the safe retry path.
     }
     clearLocalDraft();
     setIsDirty(false);
+    setSaving(false);
     onSaved(saved);
   }
 
@@ -141,7 +183,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.25em] text-text-muted">{isEdit ? "Editar sueño" : "Registrar sueño"}</p>
             <h2 id="dream-composer-title" className="mt-3 font-display text-5xl leading-[.92] tracking-[-0.045em]">{isEdit ? "Editar sueño" : "Describe el sueño."}</h2>
-            <p id="dream-composer-description" className="mt-3 max-w-md text-sm leading-6 text-text-secondary">{cloud.status === "synced" ? "Guardado en este dispositivo y sincronizado con tu cuenta." : "Guardado en este dispositivo. No se comparte."}</p>
+            <p id="dream-composer-description" className="mt-3 max-w-md text-sm leading-6 text-text-secondary">{visibility === "public" ? "Primero se preserva en privado; después se crea la copia pública." : cloud.status === "synced" ? "Guardado en este dispositivo y sincronizado con tu cuenta." : "Guardado en este dispositivo. No se comparte."}</p>
           </div>
           <button type="button" className="material-button grid h-11 w-11 shrink-0 place-items-center rounded-full" aria-label="Cerrar formulario" onClick={closeWithCare}>
             <X className="h-4 w-4" />
@@ -167,10 +209,43 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
               </motion.div>
             ) : null}
           </AnimatePresence>
+          {revealDetails ? (
+            <div className="space-y-5">
+              <fieldset>
+                <legend className="text-sm font-medium text-text-secondary">Privacidad</legend>
+                <div className="mt-2 grid grid-cols-2 gap-2 rounded-[20px] border border-[var(--border-quiet)] bg-white/20 p-1.5 [html[data-theme=night]_&]:bg-white/[.025]">
+                  <button type="button" aria-pressed={visibility === "private"} onClick={() => { setVisibility("private"); setIsDirty(true); setError(""); }} className={`flex min-h-11 items-center justify-center gap-2 rounded-[15px] px-3 text-sm transition-[color,background-color,box-shadow] ${visibility === "private" ? "bg-[var(--surface-canvas)] text-text-primary shadow-soft" : "text-text-muted"}`}><LockKeyhole className="h-3.5 w-3.5" />Privado</button>
+                  <button type="button" aria-pressed={visibility === "public"} onClick={() => { setVisibility("public"); setIsDirty(true); setError(""); }} className={`flex min-h-11 items-center justify-center gap-2 rounded-[15px] px-3 text-sm transition-[color,background-color,box-shadow] ${visibility === "public" ? "bg-[var(--surface-canvas)] text-text-primary shadow-soft" : "text-text-muted"}`}><Globe2 className="h-3.5 w-3.5" />Hacer público</button>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-text-muted">Privado por defecto. La copia pública muestra el relato y tu seudónimo, nunca el enlace clínico.</p>
+              </fieldset>
+
+              {visibility === "public" ? (
+                <label htmlFor="dream-pseudonym" className="block">
+                  <span className="mb-2 block text-sm font-medium text-text-secondary">Seudónimo público</span>
+                  <Input id="dream-pseudonym" value={pseudonym} onChange={(event) => updateField(setPseudonym, event.target.value)} placeholder="Cómo quieres firmarlo" maxLength={32} autoComplete="off" />
+                  {cloud.status !== "synced" ? <span className="mt-2 block text-xs leading-5 text-text-muted">Necesitas iniciar sesión y sincronizar antes de publicar.</span> : null}
+                </label>
+              ) : null}
+
+              {showNeuroLink ? (
+                <label htmlFor="dream-neuro-file" className="block">
+                  <span className="mb-2 flex items-center justify-between gap-3 text-sm font-medium text-text-secondary">
+                    <span className="flex items-center gap-2"><Link2 className="h-3.5 w-3.5" />EEG / MRI <span className="font-normal text-text-muted">opcional</span></span>
+                    <button type="button" className="min-h-9 px-2 text-xs font-normal text-text-muted underline-offset-4 hover:underline" onClick={() => { setNeuroFileUrl(""); setShowNeuroLink(false); setIsDirty(true); }}>Quitar</button>
+                  </span>
+                  <Input id="dream-neuro-file" type="url" inputMode="url" value={neuroFileUrl} onChange={(event) => updateField(setNeuroFileUrl, event.target.value)} placeholder="https://…" maxLength={2048} aria-describedby="dream-neuro-file-note" />
+                  <span id="dream-neuro-file-note" className="mt-2 block text-xs leading-5 text-text-muted">Sólo enlaza una referencia segura. Permanece en tu memoria privada y no se publica.</span>
+                </label>
+              ) : (
+                <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--border-quiet)] px-4 text-sm text-text-secondary transition-colors hover:text-text-primary" onClick={() => { setShowNeuroLink(true); setIsDirty(true); }}><Link2 className="h-3.5 w-3.5" />Vincular EEG / MRI</button>
+              )}
+            </div>
+          ) : null}
           {error ? <p role="alert" className="rounded-[16px] bg-[rgba(169,26,52,.1)] px-4 py-3 text-sm leading-6 text-memory-accessible [html[data-theme=night]_&]:bg-[rgba(255,145,160,.14)]">{error}</p> : null}
           <div className="flex flex-col-reverse gap-3 border-t border-[var(--border-quiet)] pt-6 sm:flex-row sm:items-center sm:justify-between">
             <button type="button" className="min-h-11 px-2 text-sm text-text-secondary underline-offset-4 hover:underline" onClick={closeWithCare}>Cerrar</button>
-            <Button type="submit"><Feather className="h-4 w-4" />{isEdit ? "Actualizar" : "Guardar"}</Button>
+            <Button type="submit" disabled={saving}><Feather className="h-4 w-4" />{saving ? "Guardando…" : isEdit ? "Actualizar" : visibility === "public" ? "Guardar y publicar" : "Guardar"}</Button>
           </div>
         </form>
 

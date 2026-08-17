@@ -31,7 +31,7 @@ type DreamStoreValue = LocalDreamState & {
   clearLocalDraft: () => void;
   cloud: CloudSyncState;
   synchronizeWithCloud: () => Promise<void>;
-  publishDream: (id: string, publicName: string) => Promise<void>;
+  publishDream: (id: string, publicName: string) => Promise<boolean>;
   makeDreamPrivate: (id: string) => Promise<void>;
 };
 
@@ -236,20 +236,28 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
   }, [cloud.status, user]);
 
   const publishDream = React.useCallback(async (id: string, publicName: string) => {
-    if (!user || cloud.status !== "synced") return;
+    if (!user || cloud.status !== "synced") return false;
     if (!isPublicArchiveAvailable) throw new Error("El archivo público está en preparación.");
     const snapshot = getClientSnapshot();
     const current = snapshot.dreams.find((dream) => dream.id === id);
-    if (!current || current.visibility === "public") return;
+    if (!current) return false;
+    if (current.visibility === "public") return true;
     const cleanName = publicName.trim().slice(0, 32);
-    if (cleanName.length < 2) return;
+    if (cleanName.length < 2) return false;
     const published = { ...current, visibility: "public" as const, updatedAt: new Date().toISOString() };
     try {
-      const { publishDreamThroughArchive } = await import("@/lib/public-archive");
+      const [{ saveDreamToCloud }, { publishDreamThroughArchive }] = await Promise.all([
+        import("@/lib/cloud-dreams"),
+        import("@/lib/public-archive"),
+      ]);
+      // Publishing immediately after creation must not race the asynchronous
+      // private sync. The trusted Worker can only project an existing source.
+      await saveDreamToCloud(user.uid, current);
       await publishDreamThroughArchive(id, cleanName);
       const dreams = snapshot.dreams.map((dream) => dream.id === id ? published : dream);
       setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
       setCloud((currentCloud) => ({ ...currentCloud, publicName: cleanName }));
+      return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo publicar el sueño. Sigue siendo privado.";
       setCloud((currentCloud) => ({ ...currentCloud, status: "error", message }));

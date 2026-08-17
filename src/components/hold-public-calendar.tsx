@@ -79,7 +79,7 @@ export function HoldPublicCalendar() {
       <motion.button
         type="button"
         data-memory-target
-        className="group relative z-calendar grid h-[7.25rem] w-[7.25rem] touch-none place-items-center rounded-full border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--surface-canvas)_72%,transparent)] text-text-primary shadow-soft backdrop-blur-md sm:h-32 sm:w-32"
+        className="group relative z-calendar grid h-[7.25rem] w-[7.25rem] touch-none place-items-center rounded-full border border-[color-mix(in_srgb,var(--calendar-line)_42%,transparent)] bg-transparent text-text-primary backdrop-blur-[1px] sm:h-32 sm:w-32"
         aria-label={reducedMotion ? `Abrir ${calendarName}` : `Mantén presionado cinco segundos para abrir el ${calendarName}`}
         aria-describedby="public-calendar-instruction"
         onPointerEnter={() => setHinting(true)}
@@ -106,12 +106,11 @@ export function HoldPublicCalendar() {
         transition={reducedMotion ? reducedTransition : { duration: 1.1, repeat: holding ? Infinity : 0, ease: "easeInOut" }}
       >
         <svg viewBox="0 0 64 64" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden="true">
-          <circle cx="32" cy="32" r="27" pathLength="1" fill="none" stroke="var(--border-quiet)" strokeWidth="0.65" vectorEffect="non-scaling-stroke" />
-          <motion.circle cx="32" cy="32" r="27" fill="none" stroke="var(--color-memory-electric)" strokeWidth="1" strokeLinecap="round" strokeDasharray={circumference} animate={{ strokeDashoffset: circumference * (1 - visibleProgress), opacity: holding ? 1 : hinting ? 0.72 : 0.24 }} transition={reducedMotion ? reducedTransition : transitions.expressive} vectorEffect="non-scaling-stroke" />
+          <circle cx="32" cy="32" r="27" pathLength="1" fill="none" stroke="var(--calendar-line)" strokeWidth="0.42" opacity="0.46" vectorEffect="non-scaling-stroke" />
+          <motion.circle cx="32" cy="32" r="27" fill="none" stroke="var(--color-memory-electric)" strokeWidth="0.62" strokeLinecap="round" strokeDasharray={circumference} animate={{ strokeDashoffset: circumference * (1 - visibleProgress), opacity: holding ? 0.88 : hinting ? 0.5 : 0.14 }} transition={reducedMotion ? reducedTransition : transitions.expressive} vectorEffect="non-scaling-stroke" />
         </svg>
-        <motion.span className="absolute inset-[16%] rounded-full bg-[radial-gradient(circle_at_38%_30%,rgba(255,255,255,.92),rgba(220,239,233,.38)_44%,rgba(230,224,237,.22)_70%,transparent)]" animate={holding && !reducedMotion ? { rotate: progress * 180, filter: `blur(${2 + progress * 5}px)` } : { rotate: 0, filter: "blur(1px)" }} />
         <span className="relative grid place-items-center">
-          <CalendarDays className="h-7 w-7 stroke-[1.15] transition-colors duration-[var(--motion-expressive)] group-hover:text-memory-electric group-focus-visible:text-memory-electric" />
+          <CalendarDays className="h-7 w-7 stroke-[0.82] opacity-60 transition-[color,opacity] duration-[var(--motion-expressive)] group-hover:text-memory-electric group-hover:opacity-90 group-focus-visible:text-memory-electric group-focus-visible:opacity-90" />
         </span>
         <motion.span aria-hidden="true" className="absolute left-1/2 top-1/2 h-px origin-left bg-memory-electric" style={{ width: `${22 + progress * 46}%` }} animate={{ rotate: holding ? 300 + progress * 480 : 24, opacity: holding ? 0.82 : 0.36 }} transition={{ duration: 0.18 }} />
       </motion.button>

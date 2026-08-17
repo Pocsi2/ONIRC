@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, Globe2, LockKeyhole, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Globe2, LockKeyhole, Pencil, Trash2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { DreamPearl } from "@/components/dream-pearl";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,11 @@ export function DreamFocus({ dream, onBack, onEdit, onDelete, canShare, publicNa
             <p className="mt-12 text-sm text-text-muted sm:mt-16">{formatDreamDate(dream.date)}</p>
             <h1 className="mt-5 max-w-4xl font-display text-balance text-[clamp(4rem,10vw,9rem)] leading-[.84] tracking-[-0.065em]">{dream.title}</h1>
             <p className="memory-copy mt-10 whitespace-pre-wrap">{dream.body}</p>
+            {dream.neuroFileUrl ? (
+              <a href={dream.neuroFileUrl} target="_blank" rel="noopener noreferrer" className="mt-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--border-quiet)] px-4 text-sm text-text-secondary transition-colors hover:text-text-primary focus-visible:text-text-primary">
+                <ExternalLink className="h-3.5 w-3.5" />Abrir referencia EEG / MRI
+              </a>
+            ) : null}
 
             <div className="mt-16 flex flex-col gap-5 border-t border-[var(--border-quiet)] pt-7 sm:flex-row sm:items-center sm:justify-between">
               <p className="max-w-md text-sm leading-6 text-text-muted">Fecha del registro: {formatDreamDate(dream.date)}.</p>

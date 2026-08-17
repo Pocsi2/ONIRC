@@ -75,3 +75,29 @@ test("escribe antes de clasificar y conserva el punto de origen al volver", asyn
   await page.getByRole("button", { name: "Volver al calendario" }).click();
   await expect(pearl).toBeFocused();
 });
+
+test("mantiene privada la referencia EEG/MRI y hace explícita la publicación", async ({ page }) => {
+  test.setTimeout(45_000);
+  await startWithEmptyCalendar(page);
+  await page.getByRole("button", { name: "Registrar sueño" }).click();
+  await page.locator("#dream-body").fill("Una señal blanca atravesaba el sueño con el ritmo de una respiración lenta.");
+  await page.locator("#dream-title").fill("Señal blanca");
+  await expect(page.getByRole("button", { name: "Privado" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Vincular EEG / MRI" }).click();
+  await page.locator("#dream-neuro-file").fill("https://example.test/studies/eeg-42");
+  await page.getByRole("button", { name: "Guardar" }).click();
+  await page.getByRole("button", { name: /Abrir sueño: Señal blanca/ }).click();
+  await expect(page.getByRole("link", { name: "Abrir referencia EEG / MRI" })).toHaveAttribute("href", "https://example.test/studies/eeg-42");
+
+  await page.getByRole("button", { name: "Editar" }).click();
+  await page.locator("#dream-neuro-file").fill("http://example.test/unsafe");
+  await page.getByRole("button", { name: "Actualizar" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "URL segura" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Hacer público" }).click();
+  await expect(page.getByRole("button", { name: "Hacer público" })).toHaveAttribute("aria-pressed", "true");
+  await page.locator("#dream-neuro-file").fill("https://example.test/studies/eeg-42");
+  await page.locator("#dream-pseudonym").fill("Marea de prueba");
+  await page.getByRole("button", { name: "Actualizar" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Inicia sesión" })).toBeVisible();
+});

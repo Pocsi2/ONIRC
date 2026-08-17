@@ -1,4 +1,4 @@
-import { DREAM_HUES, hueForId, type Dream, type DreamDraft, type SavedDraft } from "@/lib/dreams";
+import { DREAM_HUES, hueForId, normalizeNeuroFileUrl, type Dream, type DreamDraft, type SavedDraft } from "@/lib/dreams";
 
 export const DREAM_STORAGE_VERSION = 3;
 
@@ -32,6 +32,7 @@ export function isDreamRecord(value: unknown): value is Dream {
     typeof dream.hue === "string" &&
     hueSet.has(dream.hue) &&
     (dream.visibility === undefined || dream.visibility === "private" || dream.visibility === "public") &&
+    (dream.neuroFileUrl === undefined || normalizeNeuroFileUrl(dream.neuroFileUrl) !== null) &&
     isTimestamp(dream.createdAt) &&
     isTimestamp(dream.updatedAt)
   );
@@ -62,6 +63,7 @@ function migrateDream(value: unknown): Dream | null {
     createdAt: isTimestamp(legacy.createdAt) ? legacy.createdAt : timestamp,
     updatedAt: isTimestamp(legacy.updatedAt) ? legacy.updatedAt : timestamp,
     visibility: legacy.visibility === "public" || legacy.visibility === "private" ? legacy.visibility : undefined,
+    neuroFileUrl: normalizeNeuroFileUrl(legacy.neuroFileUrl) ?? undefined,
   };
 }
 
@@ -91,7 +93,7 @@ export function serializeDreams(dreams: Dream[]): PersistedDreams {
 export function isSavedDraft(value: unknown): value is SavedDraft {
   if (!value || typeof value !== "object") return false;
   const draft = value as Partial<SavedDraft>;
-  return isIsoDate(draft.date) && typeof draft.title === "string" && typeof draft.body === "string" && isTimestamp(draft.updatedAt);
+  return isIsoDate(draft.date) && typeof draft.title === "string" && typeof draft.body === "string" && (draft.neuroFileUrl === undefined || normalizeNeuroFileUrl(draft.neuroFileUrl) !== null) && isTimestamp(draft.updatedAt);
 }
 
 export function normalizeDraft(value: DreamDraft): DreamDraft {
@@ -99,5 +101,6 @@ export function normalizeDraft(value: DreamDraft): DreamDraft {
     date: value.date,
     title: value.title.slice(0, 120),
     body: value.body.slice(0, 10_000),
+    neuroFileUrl: normalizeNeuroFileUrl(value.neuroFileUrl) ?? undefined,
   };
 }
