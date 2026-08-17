@@ -105,6 +105,7 @@ export function DreamCalendar() {
   const composeValue = searchParams.get("compose");
   const composeMode = composeValue === "edit" && selectedDream ? "edit" : composeValue === "new" ? "create" : null;
   const requestedDate = searchParams.get("date");
+  const noticeDreamId = searchParams.get("notice") === "saved" ? searchParams.get("noticeDream") : null;
   const composerDate = requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate <= todayIso() ? requestedDate : todayIso();
   const dayCount = daysInMonth(currentMonth);
   const calendarVariants = withReducedMotion(calendarRecede, reducedMotion);
@@ -119,6 +120,8 @@ export function DreamCalendar() {
   const selectedCollection = selectedCollectionDate ? dreamMap.get(selectedCollectionDate) ?? [] : [];
   const monthDreams = Array.from(dreamMap.values()).flat();
   const previewDreams = previewDate ? dreamMap.get(previewDate) ?? [] : monthDreams;
+  const noticeDream = noticeDreamId ? dreams.find((dream) => dream.id === noticeDreamId) : undefined;
+  const visibleToast = toast ?? (noticeDream ? { dream: noticeDream, kind: "saved" as const } : null);
 
   const updateUrl = React.useCallback((changes: Record<string, string | null>, mode: "push" | "replace" = "push") => {
     const params = new URLSearchParams(searchParams.toString());
@@ -150,6 +153,12 @@ export function DreamCalendar() {
   React.useEffect(() => () => {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
   }, []);
+
+  React.useEffect(() => {
+    if (!noticeDreamId) return;
+    const timer = window.setTimeout(() => updateUrl({ notice: null, noticeDream: null }, "replace"), 6000);
+    return () => window.clearTimeout(timer);
+  }, [noticeDreamId, updateUrl]);
 
   function showToast(nextToast: Exclude<Toast, null>) {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
@@ -186,7 +195,7 @@ export function DreamCalendar() {
   function handleSaved(dream: Dream) {
     setHighlightedId(dream.id);
     showToast({ dream, kind: "saved" });
-    router.replace(`/calendar?month=${monthKeyForDate(dream.date)}`, { scroll: false });
+    router.replace(`/calendar?month=${monthKeyForDate(dream.date)}&notice=saved&noticeDream=${encodeURIComponent(dream.id)}`, { scroll: false });
     window.setTimeout(() => setHighlightedId(null), 1800);
   }
 
@@ -306,10 +315,10 @@ export function DreamCalendar() {
           {composeMode ? <DreamComposer key={`${composeMode}-${selectedDream?.id ?? "new"}`} mode={composeMode} dream={composeMode === "edit" ? selectedDream : undefined} initialDate={composeMode === "edit" && selectedDream ? selectedDream.date : composerDate} onClose={closeComposer} onSaved={handleSaved} /> : null}
         </AnimatePresence>
         <AnimatePresence>
-          {toast ? (
+          {visibleToast ? (
             <motion.div role="status" aria-live="polite" initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }} animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={reducedMotion ? reducedTransition : transitions.standard} className="material-frost fixed bottom-5 left-4 z-feedback max-w-[min(27rem,calc(100vw-2rem))] rounded-[20px] p-4 sm:bottom-7 sm:left-7">
-              <p className="text-sm leading-6 text-text-secondary">{toast.kind === "saved" ? "Registro guardado." : "Registro eliminado."}</p>
-              {toast.kind === "deleted" ? <button type="button" className="mt-2 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-text-primary underline-offset-4 hover:underline" onClick={() => { restoreDream(toast.dream); dismissToast(); }}><ArrowLeft className="h-3.5 w-3.5" />Deshacer</button> : null}
+              <p className="text-sm leading-6 text-text-secondary">{visibleToast.kind === "saved" ? "Registro guardado." : "Registro eliminado."}</p>
+              {visibleToast.kind === "deleted" ? <button type="button" className="mt-2 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-text-primary underline-offset-4 hover:underline" onClick={() => { restoreDream(visibleToast.dream); dismissToast(); }}><ArrowLeft className="h-3.5 w-3.5" />Deshacer</button> : null}
             </motion.div>
           ) : null}
         </AnimatePresence>
