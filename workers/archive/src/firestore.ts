@@ -138,6 +138,21 @@ export function decodeDocument(document: FirestoreDocument | undefined) {
   return Object.fromEntries(Object.entries(document.fields ?? {}).map(([key, value]) => [key, decodeFirestoreValue(value)]));
 }
 
+export function parseBatchGetResponse(body: string): FirestoreRead[] {
+  const trimmed = body.trim();
+  if (!trimmed) return [];
+
+  try {
+    const payload = JSON.parse(trimmed) as FirestoreRead | FirestoreRead[];
+    return Array.isArray(payload) ? payload : [payload];
+  } catch {
+    // Some transports expose Firestore's streamed response as NDJSON while
+    // others preserve the JSON array. Supporting both keeps the Worker stable
+    // across production and emulator/runtime boundaries.
+    return trimmed.split("\n").filter(Boolean).map((line) => JSON.parse(line) as FirestoreRead);
+  }
+}
+
 export async function beginTransaction(env: WorkerEnv) {
   const response = await firestoreRequest(env, ":beginTransaction", {
     method: "POST",
@@ -172,7 +187,7 @@ export async function readTransactionDocuments(env: WorkerEnv, transaction: stri
     }),
   });
   const body = await response.text();
-  const reads = body.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line) as FirestoreRead);
+  const reads = parseBatchGetResponse(body);
   const documents = new Map<string, FirestoreDocument | undefined>();
   for (const path of paths) documents.set(path, undefined);
   for (const read of reads) {
