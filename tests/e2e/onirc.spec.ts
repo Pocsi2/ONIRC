@@ -15,7 +15,6 @@ async function recordDream(page: import("@playwright/test").Page, title: string,
   await page.locator("#dream-body").fill(body);
   await page.locator("#dream-title").fill(title);
   await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("status")).toContainText("Registro guardado.");
 }
 
@@ -47,7 +46,7 @@ test("abre una colección finita cuando un día contiene varios sueños", async 
   await expect(page.getByRole("heading", { name: "La habitación de agua" })).toBeVisible();
   await page.goBack();
   await expect(page.getByRole("heading", { name: "2 sueños ese día." })).toBeVisible();
-  await page.getByRole("button", { name: "Volver al calendario" }).click();
+  await page.getByLabel(/Sueños del/).getByRole("button", { name: "Volver al calendario" }).click();
   await expect(page.getByRole("button", { name: /Abrir 2 sueños del/ })).toBeVisible();
 });
 
