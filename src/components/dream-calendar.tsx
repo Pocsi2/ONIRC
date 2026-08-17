@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CloudCurtain } from "@/components/cloud-curtain";
+import { CloudSyncControl } from "@/components/cloud-sync-control";
 import { DreamCollection } from "@/components/dream-collection";
 import { DreamComposer } from "@/components/dream-composer";
 import { DreamFocus } from "@/components/dream-focus";
@@ -292,6 +293,7 @@ export function DreamCalendar() {
               </motion.div>
             </section>
 
+            <CloudSyncControl />
             <footer className="mt-8 flex flex-col gap-3 border-t border-[var(--border-quiet)] pt-4 text-[10px] leading-4 text-text-muted sm:flex-row sm:items-center sm:justify-between">
               <p>{cloud.status === "synced" ? "Sincronizado de forma privada con tu cuenta." : "Este dispositivo guarda tus sueños localmente."}</p>
               {confirmReset ? (

@@ -1,15 +1,17 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Check, Chrome, LogIn, LogOut, Mail, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   createAccountWithEmail,
+  consumeGoogleRedirect,
   prepareAuthSession,
   signInWithEmail,
   signInWithGoogle,
+  signInWithGoogleRedirect,
   signOutOfOnirc,
   useAuthSession,
 } from "@/lib/auth-store";
@@ -34,12 +36,24 @@ export function AuthControl() {
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState<"google" | "email" | "sign-out" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showGoogleFallback, setShowGoogleFallback] = useState(false);
   const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (user && consumeGoogleRedirect()) router.replace("/calendar");
+  }, [router, user]);
+
+  useEffect(() => {
+    if (pending !== "google") return;
+    const timer = window.setTimeout(() => setShowGoogleFallback(true), 4500);
+    return () => window.clearTimeout(timer);
+  }, [pending]);
 
   const close = () => {
     if (!pending) {
       setOpen(false);
       setError(null);
+      setShowGoogleFallback(false);
     }
   };
 
@@ -51,6 +65,7 @@ export function AuthControl() {
   const useGoogle = async () => {
     setPending("google");
     setError(null);
+    setShowGoogleFallback(false);
     try {
       await signInWithGoogle();
       setOpen(false);
@@ -58,6 +73,17 @@ export function AuthControl() {
     } catch (caught) {
       setError(friendlyAuthError(caught));
     } finally {
+      setPending(null);
+      setShowGoogleFallback(false);
+    }
+  };
+
+  const continueGoogleHere = async () => {
+    setError(null);
+    try {
+      await signInWithGoogleRedirect();
+    } catch (caught) {
+      setError(friendlyAuthError(caught));
       setPending(null);
     }
   };
@@ -122,6 +148,12 @@ export function AuthControl() {
 
               <p className="mt-4 text-sm leading-6 text-text-secondary">Inicia sesión para sincronizar tus datos entre dispositivos.</p>
               <Button type="button" variant="secondary" className="mt-6 w-full" onClick={useGoogle} disabled={Boolean(pending)}><Chrome className="h-4 w-4" />{pending === "google" ? "Abriendo Google…" : "Iniciar sesión con Google"}</Button>
+              {showGoogleFallback ? (
+                <div className="mt-3 rounded-[18px] border border-[var(--border-quiet)] p-3 text-sm leading-6 text-text-secondary">
+                  <p>Si la ventana quedó en blanco, continúa en esta pestaña.</p>
+                  <button type="button" className="mt-2 min-h-10 font-medium text-text-primary underline decoration-[var(--border-light)] underline-offset-4" onClick={continueGoogleHere}>Continuar aquí</button>
+                </div>
+              ) : null}
               <div className="my-5 flex items-center gap-3 text-xs text-text-muted"><span className="h-px flex-1 bg-[var(--border-light)]" /> o con correo <span className="h-px flex-1 bg-[var(--border-light)]" /></div>
 
               <form className="space-y-4" onSubmit={submitEmail}>

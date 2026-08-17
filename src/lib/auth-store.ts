@@ -10,6 +10,7 @@ type FirebaseAuthSdk = typeof import("firebase/auth");
 type AuthClient = { auth: Awaited<ReturnType<typeof getFirebaseAuth>>; sdk: FirebaseAuthSdk };
 
 const sessionHintKey = "onirc:firebase-session-hint:v1";
+const googleRedirectKey = "onirc:google-redirect:v1";
 let snapshot: AuthSnapshot = { ready: false, user: null };
 let clientPromise: Promise<AuthClient> | null = null;
 let observerPromise: Promise<void> | null = null;
@@ -17,14 +18,6 @@ const listeners = new Set<() => void>();
 
 function notify() {
   listeners.forEach((listener) => listener());
-}
-
-function hasSessionHint() {
-  try {
-    return window.localStorage.getItem(sessionHintKey) === "1";
-  } catch {
-    return false;
-  }
 }
 
 function persistSessionHint(hasSession: boolean) {
@@ -47,7 +40,11 @@ function getAuthClient() {
 function observeAuth() {
   if (observerPromise) return observerPromise;
   observerPromise = getAuthClient()
-    .then(({ auth, sdk }) => new Promise<void>((resolve) => {
+    .then(({ auth, sdk }) => {
+      // Completing a same-tab Google flow is harmless when there is no
+      // redirect result and is required by embedded/mobile browsers.
+      void sdk.getRedirectResult(auth).catch(() => undefined);
+      return new Promise<void>((resolve) => {
       sdk.onAuthStateChanged(
         auth,
         (user) => {
@@ -63,7 +60,8 @@ function observeAuth() {
           resolve();
         },
       );
-    }))
+      });
+    })
     .catch(() => {
       snapshot = { ready: true, user: null };
       persistSessionHint(false);
@@ -75,13 +73,9 @@ function observeAuth() {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-
-  if (hasSessionHint()) {
-    void observeAuth();
-  } else if (!snapshot.ready) {
-    snapshot = { ready: true, user: null };
-    queueMicrotask(notify);
-  }
+  // Firebase is the authority. Always observing avoids a stale local hint
+  // hiding a valid persisted session after OAuth returns.
+  void observeAuth();
 
   return () => listeners.delete(listener);
 }
@@ -104,7 +98,42 @@ export async function prepareAuthSession() {
 export async function signInWithGoogle() {
   await prepareAuthSession();
   const { auth, sdk } = await getAuthClient();
-  await sdk.signInWithPopup(auth, new sdk.GoogleAuthProvider());
+  const provider = new sdk.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  const userAgent = window.navigator.userAgent;
+  const embedded = /ChatGPT|Electron|Instagram|FBAN|FBAV|; wv\)|WebView/i.test(userAgent);
+  if (embedded) {
+    window.sessionStorage.setItem(googleRedirectKey, "1");
+    await sdk.signInWithRedirect(auth, provider);
+    return;
+  }
+  try {
+    await sdk.signInWithPopup(auth, provider);
+  } catch (error) {
+    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+    if (!code.includes("popup-blocked") && !code.includes("operation-not-supported-in-this-environment")) throw error;
+    window.sessionStorage.setItem(googleRedirectKey, "1");
+    await sdk.signInWithRedirect(auth, provider);
+  }
+}
+
+export async function signInWithGoogleRedirect() {
+  await prepareAuthSession();
+  const { auth, sdk } = await getAuthClient();
+  const provider = new sdk.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  window.sessionStorage.setItem(googleRedirectKey, "1");
+  await sdk.signInWithRedirect(auth, provider);
+}
+
+export function consumeGoogleRedirect() {
+  try {
+    if (window.sessionStorage.getItem(googleRedirectKey) !== "1") return false;
+    window.sessionStorage.removeItem(googleRedirectKey);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function signInWithEmail(email: string, password: string) {

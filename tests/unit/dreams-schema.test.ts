@@ -41,7 +41,7 @@ describe("dream storage schema", () => {
     expect(result).toEqual({ dreams, migrated: false });
   });
 
-  it("keeps a private HTTPS EEG/MRI reference and rejects unsafe protocols", () => {
+  it("keeps a private HTTPS EEG/fMRI reference and rejects unsafe protocols", () => {
     const base = {
       id: "scan-reference",
       date: "2026-08-12",

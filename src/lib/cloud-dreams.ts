@@ -16,7 +16,14 @@ function dreamsCollection({ sdk, db }: FirestoreClient, userId: string) {
 }
 
 function sameDream(left: Dream, right: Dream) {
-  return left.date === right.date && left.title === right.title && left.body === right.body && left.hue === right.hue && left.createdAt === right.createdAt && left.updatedAt === right.updatedAt;
+  return left.date === right.date
+    && left.title === right.title
+    && left.body === right.body
+    && left.hue === right.hue
+    && left.createdAt === right.createdAt
+    && left.updatedAt === right.updatedAt
+    && left.visibility === right.visibility
+    && left.neuroFileUrl === right.neuroFileUrl;
 }
 
 function conflictId(dream: Dream, usedIds: Set<string>) {

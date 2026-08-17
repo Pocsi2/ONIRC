@@ -135,14 +135,13 @@ export function PublicDreamFeed() {
         <div className="max-w-3xl">
           <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.28em] text-text-muted"><Compass className="h-3.5 w-3.5" /> Espacio público</p>
           <h1 className="mt-5 font-display text-balance text-[clamp(3.25rem,10vw,8.5rem)] leading-[.84] tracking-[-0.06em]">Sueños<br />compartidos.</h1>
-          <p className="mt-7 max-w-2xl text-lg leading-8 text-text-secondary">Un archivo seudónimo para recorrer una memoria a la vez.</p>
-          <p className="mt-4 flex max-w-2xl items-start gap-2 text-sm leading-6 text-text-muted"><Globe2 className="mt-1 h-4 w-4 shrink-0" /> Lo que aparece aquí es público. No compartas información que prefieras conservar en privado.</p>
         </div>
 
         {status === "loading" ? <div role="status" className="mt-14 flex items-center gap-3 text-sm text-text-muted"><LoaderCircle className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Cargando archivo…</div> : null}
         {status === "error" ? <div role="alert" className="surface-frost mt-14 flex max-w-xl items-start gap-3 rounded-[24px] p-5 text-sm leading-6 text-text-secondary"><CloudOff className="mt-1 h-4 w-4 shrink-0 text-memory-accessible" /> No se pudo cargar el archivo. Inténtalo de nuevo.</div> : null}
         {status === "ready" && dreams.length === 0 ? <div className="surface-opal mt-14 max-w-xl rounded-[32px] p-8 sm:p-10"><p className="font-display text-4xl leading-none">No hay publicaciones todavía.</p><p className="mt-4 text-sm leading-6 text-text-secondary">Las publicaciones aparecerán aquí.</p></div> : null}
         {status === "ready" && dreams.length > 0 ? <PublicArchiveStage dreams={dreams} /> : null}
+        <p className="mt-16 flex max-w-2xl items-start gap-2 border-t border-[var(--border-quiet)] pt-5 text-[10px] leading-5 text-text-muted sm:mt-20"><Globe2 className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Lo que aparece aquí es público. No compartas información que prefieras conservar en privado.</p>
       </section>
     </PageTransition>
   );

@@ -69,7 +69,7 @@ export function DreamFocus({ dream, onBack, onEdit, onDelete, canShare, publicNa
             <p className="memory-copy mt-10 whitespace-pre-wrap">{dream.body}</p>
             {dream.neuroFileUrl ? (
               <a href={dream.neuroFileUrl} target="_blank" rel="noopener noreferrer" className="mt-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--border-quiet)] px-4 text-sm text-text-secondary transition-colors hover:text-text-primary focus-visible:text-text-primary">
-                <ExternalLink className="h-3.5 w-3.5" />Abrir referencia EEG / MRI
+                <ExternalLink className="h-3.5 w-3.5" />Abrir referencia EEG / fMRI
               </a>
             ) : null}
 

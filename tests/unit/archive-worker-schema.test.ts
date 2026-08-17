@@ -44,7 +44,7 @@ describe("public archive Worker schema", () => {
     expect(decodePrivateDream({ ...source, date: "2026-02-30" })).toBeNull();
   });
 
-  it("never projects the private EEG/MRI reference", () => {
+  it("never projects the private EEG/fMRI reference", () => {
     const privateMemory = { ...source, neuroFileUrl: "https://example.test/studies/mri-42" };
     const projection = buildSafeProjection(
       "p_4a82b1150a37484f9c87f1a3d3aa7777",

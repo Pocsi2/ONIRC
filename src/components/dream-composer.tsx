@@ -124,7 +124,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
     const submittedNeuroUrl = submitted.get("neuroFileUrl");
     const normalizedNeuroUrl = normalizeNeuroFileUrl(typeof submittedNeuroUrl === "string" ? submittedNeuroUrl : neuroFileUrl);
     if (normalizedNeuroUrl === null) {
-      setError("El enlace EEG/MRI debe ser una URL segura que empiece con https://");
+      setError("El enlace EEG/fMRI debe ser una URL segura que empiece con https://");
       return;
     }
     const submittedPseudonym = submitted.get("publicName");
@@ -234,14 +234,14 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
               {showNeuroLink ? (
                 <label htmlFor="dream-neuro-file" className="block">
                   <span className="mb-2 flex items-center justify-between gap-3 text-sm font-medium text-text-secondary">
-                    <span className="flex items-center gap-2"><Link2 className="h-3.5 w-3.5" />EEG / MRI <span className="font-normal text-text-muted">opcional</span></span>
+                    <span className="flex items-center gap-2"><Link2 className="h-3.5 w-3.5" />EEG / fMRI <span className="font-normal text-text-muted">opcional</span></span>
                     <button type="button" className="min-h-9 px-2 text-xs font-normal text-text-muted underline-offset-4 hover:underline" onClick={() => { setNeuroFileUrl(""); setShowNeuroLink(false); setIsDirty(true); }}>Quitar</button>
                   </span>
                   <Input id="dream-neuro-file" name="neuroFileUrl" type="url" inputMode="url" value={neuroFileUrl} onChange={(event) => updateField(setNeuroFileUrl, event.target.value)} placeholder="https://…" maxLength={2048} aria-describedby="dream-neuro-file-note" />
                   <span id="dream-neuro-file-note" className="mt-2 block text-xs leading-5 text-text-muted">Sólo enlaza una referencia segura. Permanece en tu memoria privada y no se publica.</span>
                 </label>
               ) : (
-                <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--border-quiet)] px-4 text-sm text-text-secondary transition-colors hover:text-text-primary" onClick={() => { setShowNeuroLink(true); setIsDirty(true); }}><Link2 className="h-3.5 w-3.5" />Vincular EEG / MRI</button>
+                <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--border-quiet)] px-4 text-sm text-text-secondary transition-colors hover:text-text-primary" onClick={() => { setShowNeuroLink(true); setIsDirty(true); }}><Link2 className="h-3.5 w-3.5" />Vincular EEG / fMRI</button>
               )}
             </div>
           ) : null}

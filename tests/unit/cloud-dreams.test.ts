@@ -34,4 +34,13 @@ describe("cloud dream merge", () => {
     expect(result.dreams).toHaveLength(2);
     expect(result.dreams.map((item) => item.body)).toEqual(expect.arrayContaining([local.body, remote.body]));
   });
+
+  it("does not hide a divergent private EEG/fMRI reference", () => {
+    const local = dream({ neuroFileUrl: "https://example.test/studies/local", updatedAt: "2026-08-13T10:00:00.000Z" });
+    const remote = dream({ neuroFileUrl: "https://example.test/studies/remote", updatedAt: "2026-08-14T10:00:00.000Z" });
+    const result = mergeDreamCopies([local], [remote]);
+
+    expect(result.conflicts).toBe(1);
+    expect(result.dreams.map((item) => item.neuroFileUrl)).toEqual(expect.arrayContaining([local.neuroFileUrl, remote.neuroFileUrl]));
+  });
 });

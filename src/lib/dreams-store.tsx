@@ -95,38 +95,7 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
   const [cloud, setCloud] = React.useState<CloudSyncState>({ status: "signed-out" });
   const unsubscribeCloudRef = React.useRef<(() => void) | null>(null);
   const subscriptionTokenRef = React.useRef(0);
-
-  React.useEffect(() => {
-    subscriptionTokenRef.current += 1;
-    unsubscribeCloudRef.current?.();
-    unsubscribeCloudRef.current = null;
-    if (!authReady) return;
-
-    let active = true;
-    const timer = window.setTimeout(() => {
-      if (!user) {
-        setCloud({ status: "signed-out" });
-        return;
-      }
-
-      void import("@/lib/cloud-dreams")
-        .then(({ loadPublicName }) => loadPublicName(user.uid))
-        .then((publicName) => {
-          if (active) setCloud({ status: "ready", publicName, message: "Cuenta lista. Los datos siguen en este dispositivo." });
-        })
-        .catch(() => {
-          if (active) setCloud({ status: "ready", message: "Cuenta lista. Los datos siguen en este dispositivo." });
-        });
-    }, 0);
-
-    return () => {
-      active = false;
-      window.clearTimeout(timer);
-      subscriptionTokenRef.current += 1;
-      unsubscribeCloudRef.current?.();
-      unsubscribeCloudRef.current = null;
-    };
-  }, [authReady, user]);
+  const cloudSessionRef = React.useRef(0);
 
   const beginCloudSubscription = React.useCallback((userId: string) => {
     unsubscribeCloudRef.current?.();
@@ -172,6 +141,52 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
       setCloud((currentCloud) => ({ ...currentCloud, status: "error", message: "No se pudo sincronizar. Los datos locales siguen disponibles." }));
     }
   }, [beginCloudSubscription, cloud.publicName, user]);
+
+  React.useEffect(() => {
+    cloudSessionRef.current += 1;
+    const session = cloudSessionRef.current;
+    subscriptionTokenRef.current += 1;
+    unsubscribeCloudRef.current?.();
+    unsubscribeCloudRef.current = null;
+    if (!authReady) return;
+
+    let active = true;
+    const timer = window.setTimeout(() => {
+      if (!active) return;
+      if (!user) {
+        setCloud({ status: "signed-out" });
+        return;
+      }
+      setCloud((currentCloud) => ({ ...currentCloud, status: "syncing", message: "Sincronizando datos…" }));
+      void import("@/lib/cloud-dreams")
+        .then(async ({ loadPublicName, synchronizeDreams }) => {
+          const publicName = await loadPublicName(user.uid).catch(() => "");
+          const result = await synchronizeDreams(user.uid, getClientSnapshot().dreams);
+          if (!active || cloudSessionRef.current !== session) return;
+          setState({ ...getClientSnapshot(), dreams: result.dreams, persistence: saveDreams(result.dreams), isReady: true });
+          beginCloudSubscription(user.uid);
+          setCloud({
+            status: "synced",
+            publicName,
+            message: result.conflicts
+              ? `Datos sincronizados. Se detectaron ${result.conflicts} versión${result.conflicts === 1 ? "" : "es"} distinta${result.conflicts === 1 ? "" : "s"}.`
+              : "Datos sincronizados de forma privada.",
+          });
+        })
+        .catch(() => {
+          if (active && cloudSessionRef.current === session) setCloud({ status: "error", message: "No se pudo sincronizar. Los datos locales siguen disponibles." });
+        });
+    }, 0);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+      cloudSessionRef.current += 1;
+      subscriptionTokenRef.current += 1;
+      unsubscribeCloudRef.current?.();
+      unsubscribeCloudRef.current = null;
+    };
+  }, [authReady, beginCloudSubscription, user]);
 
   const addDream = React.useCallback((draft: DreamDraft) => {
     const dream = makeDream(draft, idForDream(draft.title));
