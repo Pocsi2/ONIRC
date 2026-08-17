@@ -4,6 +4,7 @@ import * as React from "react";
 import { CalendarDays } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
+import { isPublicArchiveAvailable } from "@/lib/archive-state";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
 
 const HOLD_DURATION = 5000;
@@ -16,6 +17,7 @@ export function HoldPublicCalendar() {
   const [progress, setProgress] = React.useState(0);
   const [holding, setHolding] = React.useState(false);
   const [hinting, setHinting] = React.useState(false);
+  const calendarName = isPublicArchiveAvailable ? "calendario público" : "calendario privado";
 
   const cancel = React.useCallback(() => {
     if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
@@ -29,7 +31,7 @@ export function HoldPublicCalendar() {
     frameRef.current = null;
     setProgress(1);
     setHolding(false);
-    window.setTimeout(() => router.push("/explorar"), reducedMotion ? 0 : 260);
+    window.setTimeout(() => router.push(isPublicArchiveAvailable ? "/explorar" : "/calendar"), reducedMotion ? 0 : 260);
   }, [reducedMotion, router]);
 
   const begin = React.useCallback(() => {
@@ -78,7 +80,7 @@ export function HoldPublicCalendar() {
         type="button"
         data-memory-target
         className="group relative z-calendar grid h-[7.25rem] w-[7.25rem] touch-none place-items-center rounded-full border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--surface-canvas)_72%,transparent)] text-text-primary shadow-soft backdrop-blur-md sm:h-32 sm:w-32"
-        aria-label={reducedMotion ? "Abrir calendario público" : "Mantén presionado cinco segundos para abrir el calendario público"}
+        aria-label={reducedMotion ? `Abrir ${calendarName}` : `Mantén presionado cinco segundos para abrir el ${calendarName}`}
         aria-describedby="public-calendar-instruction"
         onPointerEnter={() => setHinting(true)}
         onPointerLeave={() => { if (!holding) setHinting(false); }}
@@ -113,7 +115,7 @@ export function HoldPublicCalendar() {
         </span>
         <motion.span aria-hidden="true" className="absolute left-1/2 top-1/2 h-px origin-left bg-memory-electric" style={{ width: `${22 + progress * 46}%` }} animate={{ rotate: holding ? 300 + progress * 480 : 24, opacity: holding ? 0.82 : 0.36 }} transition={{ duration: 0.18 }} />
       </motion.button>
-      <p id="public-calendar-instruction" className="sr-only">{reducedMotion ? "Activa para abrir el calendario público." : "Mantén presionado cinco segundos para abrir el calendario público."}</p>
+      <p id="public-calendar-instruction" className="sr-only">{reducedMotion ? `Activa para abrir el ${calendarName}.` : `Mantén presionado cinco segundos para abrir el ${calendarName}.`}</p>
     </div>
   );
 }
