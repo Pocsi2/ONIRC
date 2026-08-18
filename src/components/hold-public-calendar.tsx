@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { CalendarDays } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 import { useRouter } from "next/navigation";
 import { isPublicArchiveAvailable } from "@/lib/archive-state";
 import { reducedTransition, transitions } from "@/lib/motion/tokens";
@@ -14,25 +14,35 @@ export function HoldPublicCalendar() {
   const reducedMotion = useReducedMotion();
   const frameRef = React.useRef<number | null>(null);
   const startedAtRef = React.useRef(0);
-  const [progress, setProgress] = React.useState(0);
+  const progress = useMotionValue(0.035);
   const [holding, setHolding] = React.useState(false);
   const [hinting, setHinting] = React.useState(false);
   const calendarName = isPublicArchiveAvailable ? "calendario público" : "calendario privado";
+  const targetHref = isPublicArchiveAvailable ? "/explorar" : "/calendar";
+  const circumference = 2 * Math.PI * 27;
+  const ringOffset = useTransform(progress, (value) => circumference * (1 - value));
+  const fieldOpacity = useTransform(progress, [0, 1], [0.08, 0.8]);
+  const lineWidth = useTransform(progress, [0, 1], ["22%", "68%"]);
+  const lineRotation = useTransform(progress, [0, 1], [24, 780]);
+
+  React.useEffect(() => {
+    router.prefetch(targetHref);
+  }, [router, targetHref]);
 
   const cancel = React.useCallback(() => {
     if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
     frameRef.current = null;
     setHolding(false);
-    setProgress(0);
-  }, []);
+    progress.set(hinting ? 0.22 : 0.035);
+  }, [hinting, progress]);
 
   const complete = React.useCallback(() => {
     if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
     frameRef.current = null;
-    setProgress(1);
+    progress.set(1);
     setHolding(false);
-    window.setTimeout(() => router.push(isPublicArchiveAvailable ? "/explorar" : "/calendar"), reducedMotion ? 0 : 260);
-  }, [reducedMotion, router]);
+    router.push(targetHref);
+  }, [progress, router, targetHref]);
 
   const begin = React.useCallback(() => {
     if (holding) return;
@@ -41,15 +51,16 @@ export function HoldPublicCalendar() {
       return;
     }
     startedAtRef.current = performance.now();
+    progress.set(0);
     setHolding(true);
     const update = (time: number) => {
       const next = Math.min(1, (time - startedAtRef.current) / HOLD_DURATION);
-      setProgress(next);
+      progress.set(next);
       if (next >= 1) complete();
       else frameRef.current = window.requestAnimationFrame(update);
     };
     frameRef.current = window.requestAnimationFrame(update);
-  }, [complete, holding, reducedMotion]);
+  }, [complete, holding, progress, reducedMotion]);
 
   React.useEffect(() => () => {
     if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
@@ -65,15 +76,16 @@ export function HoldPublicCalendar() {
     };
   }, [reducedMotion]);
 
-  const circumference = 2 * Math.PI * 27;
-  const visibleProgress = holding ? progress : hinting ? 0.22 : 0.035;
+  React.useEffect(() => {
+    if (!holding) progress.set(hinting ? 0.22 : 0.035);
+  }, [hinting, holding, progress]);
 
   return (
     <div className="relative">
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-surface bg-[radial-gradient(circle_at_50%_62%,rgba(255,255,255,.78),rgba(230,59,87,.08)_24%,transparent_58%)] backdrop-blur-[2px]"
-        animate={{ opacity: holding ? Math.min(0.82, progress + 0.12) : 0 }}
+        className="pointer-events-none fixed inset-0 z-surface bg-[radial-gradient(circle_at_50%_62%,rgba(255,255,255,.76),rgba(230,59,87,.08)_24%,transparent_58%)]"
+        style={{ opacity: holding ? fieldOpacity : 0 }}
         transition={reducedMotion ? reducedTransition : transitions.standard}
       />
       <motion.button
@@ -102,17 +114,17 @@ export function HoldPublicCalendar() {
             cancel();
           }
         }}
-        animate={holding && !reducedMotion ? { scale: [1, 0.985, 1.015], boxShadow: `0 28px ${70 + progress * 70}px rgba(230,59,87,${0.08 + progress * 0.14})` } : { scale: 1 }}
-        transition={reducedMotion ? reducedTransition : { duration: 1.1, repeat: holding ? Infinity : 0, ease: "easeInOut" }}
+        animate={holding && !reducedMotion ? { scale: 0.985 } : { scale: 1 }}
+        transition={reducedMotion ? reducedTransition : transitions.fast}
       >
         <svg viewBox="0 0 64 64" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden="true">
           <circle cx="32" cy="32" r="27" pathLength="1" fill="none" stroke="var(--calendar-line)" strokeWidth="0.42" opacity="0.46" vectorEffect="non-scaling-stroke" />
-          <motion.circle cx="32" cy="32" r="27" fill="none" stroke="var(--color-memory-electric)" strokeWidth="0.62" strokeLinecap="round" strokeDasharray={circumference} animate={{ strokeDashoffset: circumference * (1 - visibleProgress), opacity: holding ? 0.88 : hinting ? 0.5 : 0.14 }} transition={reducedMotion ? reducedTransition : transitions.expressive} vectorEffect="non-scaling-stroke" />
+          <motion.circle cx="32" cy="32" r="27" fill="none" stroke="var(--color-memory-electric)" strokeWidth="0.62" strokeLinecap="round" strokeDasharray={circumference} style={{ strokeDashoffset: ringOffset }} animate={{ opacity: holding ? 0.88 : hinting ? 0.5 : 0.14 }} transition={reducedMotion ? reducedTransition : transitions.fast} vectorEffect="non-scaling-stroke" />
         </svg>
         <span className="relative grid place-items-center">
           <CalendarDays className="h-7 w-7 stroke-[0.82] opacity-60 transition-[color,opacity] duration-[var(--motion-expressive)] group-hover:text-memory-electric group-hover:opacity-90 group-focus-visible:text-memory-electric group-focus-visible:opacity-90" />
         </span>
-        <motion.span aria-hidden="true" className="absolute left-1/2 top-1/2 h-px origin-left bg-memory-electric" style={{ width: `${22 + progress * 46}%` }} animate={{ rotate: holding ? 300 + progress * 480 : 24, opacity: holding ? 0.82 : 0.36 }} transition={{ duration: 0.18 }} />
+        <motion.span aria-hidden="true" className="absolute left-1/2 top-1/2 h-px origin-left bg-memory-electric" style={{ width: lineWidth, rotate: lineRotation }} animate={{ opacity: holding ? 0.82 : 0.36 }} transition={reducedMotion ? reducedTransition : transitions.fast} />
       </motion.button>
       <p id="public-calendar-instruction" className="sr-only">{reducedMotion ? `Activa para abrir el ${calendarName}.` : `Mantén presionado cinco segundos para abrir el ${calendarName}.`}</p>
     </div>

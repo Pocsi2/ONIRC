@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { flushSync } from "react-dom";
+import { useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +20,20 @@ export function ViewTransitionLink({
   className,
   onBeforeTransition,
   onClick,
+  onFocus,
+  onPointerEnter,
   ...props
 }: ViewTransitionLinkProps) {
   const router = useRouter();
+  const reducedMotion = useReducedMotion();
+
+  const prefetch = React.useCallback(() => {
+    if (href.startsWith("/")) router.prefetch(href);
+  }, [href, router]);
+
+  React.useEffect(() => {
+    prefetch();
+  }, [prefetch]);
 
   function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
@@ -44,9 +56,9 @@ export function ViewTransitionLink({
       flushSync(onBeforeTransition);
     }
 
-    if (transition) {
+    if (transition && !reducedMotion) {
       transition(() => {
-        flushSync(() => router.push(href));
+        router.push(href);
       });
       return;
     }
@@ -58,6 +70,14 @@ export function ViewTransitionLink({
     <a
       href={href}
       onClick={handleClick}
+      onFocus={(event) => {
+        prefetch();
+        onFocus?.(event);
+      }}
+      onPointerEnter={(event) => {
+        prefetch();
+        onPointerEnter?.(event);
+      }}
       className={cn("focus-visible:outline-none", className)}
       {...props}
     />

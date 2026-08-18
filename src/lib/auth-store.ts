@@ -14,6 +14,7 @@ const googleRedirectKey = "onirc:google-redirect:v1";
 let snapshot: AuthSnapshot = { ready: false, user: null };
 let clientPromise: Promise<AuthClient> | null = null;
 let observerPromise: Promise<void> | null = null;
+let subscriptionBootstrapped = false;
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -73,9 +74,23 @@ function observeAuth() {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  // Firebase is the authority. Always observing avoids a stale local hint
-  // hiding a valid persisted session after OAuth returns.
-  void observeAuth();
+  if (!subscriptionBootstrapped) {
+    subscriptionBootstrapped = true;
+    let shouldRestoreSession = false;
+    try {
+      shouldRestoreSession = window.localStorage.getItem(sessionHintKey) === "1"
+        || window.sessionStorage.getItem(googleRedirectKey) === "1";
+    } catch {
+      // Storage may be unavailable; explicit account intent remains the fallback.
+    }
+
+    if (shouldRestoreSession) {
+      void observeAuth();
+    } else {
+      snapshot = { ready: true, user: null };
+      queueMicrotask(notify);
+    }
+  }
 
   return () => listeners.delete(listener);
 }

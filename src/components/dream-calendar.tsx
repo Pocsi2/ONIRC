@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { CloudCurtain } from "@/components/cloud-curtain";
 import { CloudSyncControl } from "@/components/cloud-sync-control";
 import { DreamCollection } from "@/components/dream-collection";
@@ -86,9 +86,22 @@ function MonthWheel({ month, onStep, onToday }: { month: Date; onStep: (amount: 
   );
 }
 
-export function DreamCalendar() {
+function useCalendarQuery() {
+  const [query, setQuery] = React.useState("");
+
+  React.useEffect(() => {
+    const readLocation = () => setQuery(window.location.search.slice(1));
+    readLocation();
+    window.addEventListener("popstate", readLocation);
+    return () => window.removeEventListener("popstate", readLocation);
+  }, []);
+
+  return [React.useMemo(() => new URLSearchParams(query), [query]), setQuery] as const;
+}
+
+export function DreamCalendar({ initialMonthKey }: { initialMonthKey: string }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [searchParams, setCalendarQuery] = useCalendarQuery();
   const reducedMotion = useReducedMotion();
   const { dreams, isReady, persistence, removeDream, restoreDream, resetDreams, cloud, publishDream, makeDreamPrivate } = useDreamStore();
   const [highlightedId, setHighlightedId] = React.useState<string | null>(null);
@@ -98,7 +111,8 @@ export function DreamCalendar() {
   const previousDreamRef = React.useRef<string | null>(null);
   const toastTimerRef = React.useRef<number | null>(null);
 
-  const currentMonth = monthFromKey(searchParams.get("month")) ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const [localMonthKey, setLocalMonthKey] = React.useState(initialMonthKey);
+  const currentMonth = monthFromKey(searchParams.get("month")) ?? monthFromKey(localMonthKey) ?? new Date(0);
   const currentMonthKey = keyForMonth(currentMonth);
   const selectedDreamId = searchParams.get("dream");
   const selectedDream = dreams.find((dream) => dream.id === selectedDreamId);
@@ -132,9 +146,18 @@ export function DreamCalendar() {
     });
     const query = params.toString();
     const href = query ? `/calendar?${query}` : "/calendar";
+    setCalendarQuery(query);
     if (mode === "replace") router.replace(href, { scroll: false });
     else router.push(href, { scroll: false });
-  }, [router, searchParams]);
+  }, [router, searchParams, setCalendarQuery]);
+
+  React.useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const now = new Date();
+      setLocalMonthKey(keyForMonth(new Date(now.getFullYear(), now.getMonth(), 1)));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   React.useEffect(() => {
     if (!isReady) return;
@@ -196,7 +219,15 @@ export function DreamCalendar() {
   function handleSaved(dream: Dream) {
     setHighlightedId(dream.id);
     showToast({ dream, kind: "saved" });
-    router.replace(`/calendar?month=${monthKeyForDate(dream.date)}&notice=saved&noticeDream=${encodeURIComponent(dream.id)}`, { scroll: false });
+    updateUrl({
+      month: monthKeyForDate(dream.date),
+      notice: "saved",
+      noticeDream: dream.id,
+      dream: null,
+      collection: null,
+      compose: null,
+      date: null,
+    }, "replace");
     window.setTimeout(() => setHighlightedId(null), 1800);
   }
 
@@ -210,13 +241,13 @@ export function DreamCalendar() {
   const isCalendarEmpty = isReady && dreams.length === 0;
   return (
     <LayoutGroup id="calendar-memory">
-      <div className="relative pb-28">
+      <div className="relative pb-[calc(9rem+env(safe-area-inset-bottom))] sm:pb-32">
         <motion.div animate={selectedDream || selectedCollection.length > 1 ? "receded" : "rest"} initial="rest" variants={calendarVariants} className="z-calendar">
           <div className="mx-auto max-w-[1160px]">
             <header className="mb-8 flex flex-col gap-7 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-3xl">
                 <h1 className="type-ethereal font-display text-balance leading-none text-text-primary">
-                  <span className="block capitalize text-[clamp(4.8rem,10vw,9.8rem)] tracking-[-0.055em]">{monthName(currentMonth)}</span>
+                  <span className="block capitalize text-[clamp(3.35rem,17vw,5.2rem)] tracking-[-0.055em] sm:text-[clamp(4.8rem,10vw,9.8rem)]">{monthName(currentMonth)}</span>
                   <span className="mt-1 block text-[clamp(1rem,2.2vw,1.7rem)] font-normal tracking-[0.34em] text-text-muted">de {currentMonth.getFullYear()}</span>
                 </h1>
                 {persistence.kind === "warning" && persistence.message ? <p role="status" aria-live="polite" className="mt-3 text-xs leading-5 text-memory-accessible">{persistence.message}</p> : null}
@@ -243,32 +274,42 @@ export function DreamCalendar() {
                   const top = 50 + Math.sin(angle) * 45;
                   return (
                     <li key={date} className={cn("orbit-day pointer-events-none absolute", hasDreams && "z-calendar")} style={{ left: `${left}%`, top: `${top}%` }}>
-                      <button
-                        id={dayDreams.length === 1 ? `dream-pearl-${dayDreams[0].id}` : undefined}
-                        type="button"
-                        className={cn("pointer-events-auto group relative grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-[9px] font-medium transition-transform sm:h-11 sm:w-11 sm:text-[11px]", hasDreams ? "text-text-primary hover:scale-110" : "text-text-muted hover:text-text-primary", isToday && "after:absolute after:-bottom-0.5 after:h-px after:w-4 after:bg-memory-electric")}
-                        aria-label={hasDreams ? dayDreams.length === 1 ? `Abrir sueño: ${dayDreams[0].title}, ${formatDreamDate(date)}` : `Abrir ${dayDreams.length} sueños del ${formatDreamDate(date)}` : `${formatDreamDate(date)}, sin sueños`}
-                        onPointerEnter={() => setPreviewDate(date)}
-                        onPointerLeave={() => setPreviewDate(null)}
-                        onFocus={() => setPreviewDate(date)}
-                        onBlur={() => setPreviewDate(null)}
-                        onClick={() => {
-                          setPreviewDate(date);
-                          if (dayDreams.length === 1) updateUrl({ dream: dayDreams[0].id, compose: null });
-                          if (dayDreams.length > 1) updateUrl({ collection: date, dream: null, compose: null });
-                        }}
-                      >
-                        <span className="relative z-10">{day}</span>
-                        {hasDreams ? <span className="absolute left-1/2 top-[62%] -translate-x-1/2 scale-[.46] sm:top-[68%] sm:scale-[.58]"><DreamPearl dream={dayDreams[0]} size="md" multiple={dayDreams.length > 1} interactive /></span> : null}
-                        {hasDreams ? <span className="orbit-tooltip pointer-events-none absolute left-1/2 top-[calc(100%+0.55rem)] z-feedback w-36 -translate-x-1/2 rounded-full bg-[var(--surface-canvas)] px-3 py-2 text-center text-[9px] leading-4 tracking-[0.06em] text-text-secondary shadow-soft"><span className="text-memory-accessible">Tú</span> · {dayDreams[0].title}</span> : null}
-                      </button>
+                      {hasDreams ? (
+                        <button
+                          id={dayDreams.length === 1 ? `dream-pearl-${dayDreams[0].id}` : undefined}
+                          type="button"
+                          className={cn("pointer-events-auto group relative grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-[9px] font-medium text-text-primary transition-transform duration-[var(--motion-fast)] hover:scale-105 active:scale-[.98] sm:text-[11px]", isToday && "after:absolute after:-bottom-0.5 after:h-px after:w-4 after:bg-memory-electric")}
+                          aria-label={dayDreams.length === 1 ? `Abrir sueño: ${dayDreams[0].title}, ${formatDreamDate(date)}` : `Abrir ${dayDreams.length} sueños del ${formatDreamDate(date)}`}
+                          onPointerEnter={() => setPreviewDate(date)}
+                          onPointerLeave={() => setPreviewDate(null)}
+                          onFocus={() => setPreviewDate(date)}
+                          onBlur={() => setPreviewDate(null)}
+                          onClick={() => {
+                            setPreviewDate(date);
+                            if (dayDreams.length === 1) updateUrl({ dream: dayDreams[0].id, compose: null });
+                            if (dayDreams.length > 1) updateUrl({ collection: date, dream: null, compose: null });
+                          }}
+                        >
+                          <span className="relative z-10">{day}</span>
+                          <span className="absolute left-1/2 top-[62%] -translate-x-1/2 scale-[.46] sm:top-[68%] sm:scale-[.58]"><DreamPearl dream={dayDreams[0]} size="md" multiple={dayDreams.length > 1} interactive /></span>
+                          <span className="orbit-tooltip pointer-events-none absolute left-1/2 top-[calc(100%+0.55rem)] z-feedback hidden w-36 -translate-x-1/2 rounded-full bg-[var(--surface-canvas)] px-3 py-2 text-center text-[9px] leading-4 tracking-[0.06em] text-text-secondary shadow-soft sm:block"><span className="text-memory-accessible">Tú</span> · {dayDreams[0].title}</span>
+                        </button>
+                      ) : (
+                        <span
+                          className={cn("relative grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-[9px] font-medium text-text-muted sm:h-11 sm:w-11 sm:text-[11px]", isToday && "after:absolute after:-bottom-0.5 after:h-px after:w-4 after:bg-memory-electric")}
+                          aria-label={`${formatDreamDate(date)}, sin sueños`}
+                          aria-current={isToday ? "date" : undefined}
+                        >
+                          {day}
+                        </span>
+                      )}
                     </li>
                   );
                 })}
               </ol>
               <motion.div layout className="absolute inset-[23%] grid place-items-center rounded-full bg-[radial-gradient(circle_at_40%_34%,rgba(255,255,255,.66),rgba(255,255,255,.18)_46%,transparent_72%)] p-[8%] text-center backdrop-blur-[2px]">
                 <AnimatePresence mode="wait">
-                  <motion.div key={previewDate ?? "month"} initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, filter: "blur(5px)" }} animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }} exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.04, filter: "blur(4px)" }} transition={reducedMotion ? reducedTransition : transitions.expressive} className="w-full">
+                  <motion.div key={previewDate ?? "month"} initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.02 }} transition={reducedMotion ? reducedTransition : transitions.standard} className="w-full">
                     {previewDate ? <p className="mb-3 text-[8px] uppercase tracking-[0.22em] text-text-muted sm:text-[10px]">{formatDreamDate(previewDate)}</p> : null}
                     {previewDreams.length ? (
                       <div>
@@ -299,15 +340,15 @@ export function DreamCalendar() {
               {confirmReset ? (
                 <span className="flex flex-wrap items-center gap-2 text-text-secondary">
                   <span>¿Borrar todos los sueños locales?</span>
-                  <Button size="sm" variant="secondary" onClick={() => { resetDreams(); setConfirmReset(false); }}>Sí, borrar datos</Button>
-                  <button type="button" className="min-h-9 px-2 text-xs underline-offset-4 hover:underline" onClick={() => setConfirmReset(false)}>Cancelar</button>
+                  <Button size="sm" variant="secondary" className="min-h-11" onClick={() => { resetDreams(); setConfirmReset(false); }}>Sí, borrar datos</Button>
+                  <button type="button" className="min-h-11 px-2 text-xs underline-offset-4 hover:underline" onClick={() => setConfirmReset(false)}>Cancelar</button>
                 </span>
-              ) : <button type="button" className="inline-flex min-h-10 items-center gap-2 self-start text-[10px] underline-offset-4 hover:underline sm:self-auto" onClick={() => setConfirmReset(true)}><RotateCcw className="h-3 w-3" />Borrar datos locales</button>}
+              ) : <button type="button" className="inline-flex min-h-11 items-center gap-2 self-start text-[10px] underline-offset-4 hover:underline sm:self-auto" onClick={() => setConfirmReset(true)}><RotateCcw className="h-3 w-3" />Borrar datos locales</button>}
             </footer>
           </div>
         </motion.div>
 
-        {!selectedDream && selectedCollection.length < 2 && !composeMode ? <div className="fixed bottom-5 right-4 z-surface sm:bottom-7 sm:right-7 lg:right-10"><CloudCurtain onOpen={() => openComposer()} emphasized={isCalendarEmpty} /></div> : null}
+        {!selectedDream && selectedCollection.length < 2 && !composeMode ? <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-surface sm:bottom-7 sm:right-7 lg:right-10"><CloudCurtain onOpen={() => openComposer()} emphasized={isCalendarEmpty} /></div> : null}
 
         <AnimatePresence>
           {selectedDream && !composeMode ? <DreamFocus key={selectedDream.id} dream={selectedDream} onBack={closeFocus} onEdit={() => updateUrl({ compose: "edit" })} onDelete={() => handleDelete(selectedDream)} canShare={cloud.status === "synced"} publicName={cloud.publicName} onPublish={async (publicName) => { await publishDream(selectedDream.id, publicName); }} onMakePrivate={() => void makeDreamPrivate(selectedDream.id)} /> : null}
@@ -318,9 +359,9 @@ export function DreamCalendar() {
         </AnimatePresence>
         <AnimatePresence>
           {visibleToast ? (
-            <motion.div role="status" aria-live="polite" initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }} animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={reducedMotion ? reducedTransition : transitions.standard} className="material-frost fixed bottom-5 left-4 z-feedback max-w-[min(27rem,calc(100vw-2rem))] rounded-[20px] p-4 sm:bottom-7 sm:left-7">
+            <motion.div role="status" aria-live="polite" initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }} animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={reducedMotion ? reducedTransition : transitions.standard} className="material-frost fixed bottom-[calc(env(safe-area-inset-bottom)+6.75rem)] left-4 z-feedback max-w-[min(27rem,calc(100vw-2rem))] rounded-[20px] p-4 sm:bottom-7 sm:left-7">
               <p className="text-sm leading-6 text-text-secondary">{visibleToast.kind === "saved" ? "Registro guardado." : "Registro eliminado."}</p>
-              {visibleToast.kind === "deleted" ? <button type="button" className="mt-2 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-text-primary underline-offset-4 hover:underline" onClick={() => { restoreDream(visibleToast.dream); dismissToast(); }}><ArrowLeft className="h-3.5 w-3.5" />Deshacer</button> : null}
+              {visibleToast.kind === "deleted" ? <button type="button" className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-text-primary underline-offset-4 hover:underline" onClick={() => { restoreDream(visibleToast.dream); dismissToast(); }}><ArrowLeft className="h-3.5 w-3.5" />Deshacer</button> : null}
             </motion.div>
           ) : null}
         </AnimatePresence>

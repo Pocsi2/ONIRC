@@ -2,12 +2,11 @@ import { AppShell } from "@/components/app-shell";
 import { DreamCalendar } from "@/components/dream-calendar";
 
 export default function CalendarPage() {
+  const initialMonthKey = new Date().toISOString().slice(0, 7);
+
   return (
     <AppShell>
-      <Suspense fallback={<p className="pt-24 text-sm text-text-muted">Abriendo el calendario…</p>}>
-        <DreamCalendar />
-      </Suspense>
+      <DreamCalendar initialMonthKey={initialMonthKey} />
     </AppShell>
   );
 }
-import { Suspense } from "react";
