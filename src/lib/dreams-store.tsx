@@ -273,10 +273,10 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
       setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
       setCloud((currentCloud) => ({ ...currentCloud, publicName: cleanName }));
       return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo publicar el sueño. Sigue siendo privado.";
+    } catch {
+      const message = "No se pudo publicar el sueño. Sigue siendo privado.";
       setCloud((currentCloud) => ({ ...currentCloud, status: "error", message }));
-      throw error;
+      throw new Error(message);
     }
   }, [cloud.status, user]);
 
@@ -292,10 +292,10 @@ export function DreamStoreProvider({ children }: { children: React.ReactNode }) 
       await unpublishDreamThroughArchive(id);
       const dreams = snapshot.dreams.map((dream) => dream.id === id ? privateDream : dream);
       setState({ ...snapshot, dreams, persistence: saveDreams(dreams), isReady: true });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo retirar la publicación. El sueño sigue público hasta que se confirme el cambio.";
+    } catch {
+      const message = "No se pudo retirar la publicación. El sueño sigue público hasta que se confirme el cambio.";
       setCloud((currentCloud) => ({ ...currentCloud, status: "error", message }));
-      throw error;
+      throw new Error(message);
     }
   }, [cloud.status, user]);
 

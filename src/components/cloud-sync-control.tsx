@@ -1,6 +1,6 @@
 "use client";
 
-import { Cloud, CloudOff, CloudUpload, LoaderCircle } from "lucide-react";
+import { CloudOff, CloudUpload, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/lib/auth-store";
 import { useDreamStore } from "@/lib/dreams-store";
@@ -14,17 +14,23 @@ export function CloudSyncControl() {
   const isSyncing = cloud.status === "syncing";
   const isSynced = cloud.status === "synced";
   if (isSynced) return null;
-  const Icon = isSynced ? Cloud : cloud.status === "error" ? CloudOff : isSyncing ? LoaderCircle : CloudUpload;
+  const hasError = cloud.status === "error";
+  const Icon = hasError ? CloudOff : isSyncing ? LoaderCircle : CloudUpload;
+  const statusMessage = hasError
+    ? "No se pudo sincronizar. Tus sueños siguen guardados en este dispositivo."
+    : isSyncing
+      ? "Sincronizando tus sueños…"
+      : "Sincroniza tus sueños entre tus dispositivos.";
 
   return (
-    <section className="mt-5 flex max-w-xl flex-col gap-3 border-t border-[var(--border-quiet)] pt-4 sm:flex-row sm:items-center sm:justify-between" aria-label="Copia privada">
-      <div className="flex min-w-0 items-start gap-3">
-        <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${isSyncing ? "animate-spin" : ""} ${cloud.status === "error" ? "text-memory-accessible" : "text-text-secondary"}`} aria-hidden="true" />
-        <p role="status" aria-live="polite" className="text-sm leading-6 text-text-secondary">{cloud.message ?? "Sincroniza tus datos entre dispositivos."}</p>
+    <section className="mt-5 flex max-w-xl items-center justify-between gap-3 border-t border-[var(--border-quiet)] pt-4" aria-label="Copia privada" aria-busy={isSyncing}>
+      <div className="flex min-w-0 items-start gap-2.5">
+        <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${isSyncing ? "animate-spin motion-reduce:animate-none" : ""} ${hasError ? "text-memory-accessible" : "text-text-secondary"}`} aria-hidden="true" />
+        <p role="status" aria-live="polite" aria-atomic="true" className="text-xs leading-5 text-text-secondary sm:text-sm sm:leading-6">{statusMessage}</p>
       </div>
       {!isSyncing ? (
-        <Button variant="secondary" size="sm" className="shrink-0" onClick={() => void synchronizeWithCloud()}>
-          {cloud.status === "error" ? "Reintentar" : "Sincronizar"}
+        <Button variant="secondary" size="sm" className="min-h-11 shrink-0 px-3 sm:px-4" onClick={() => void synchronizeWithCloud()}>
+          {hasError ? "Reintentar" : "Sincronizar"}
         </Button>
       ) : null}
     </section>

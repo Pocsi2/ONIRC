@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeDreamCopies } from "@/lib/cloud-dreams";
+import { mergeDreamCopies, toFirestoreDream } from "@/lib/cloud-dreams";
 import type { Dream } from "@/lib/dreams";
 
 const dream = (overrides: Partial<Dream> = {}): Dream => ({
@@ -42,5 +42,27 @@ describe("cloud dream merge", () => {
 
     expect(result.conflicts).toBe(1);
     expect(result.dreams.map((item) => item.neuroFileUrl)).toEqual(expect.arrayContaining([local.neuroFileUrl, remote.neuroFileUrl]));
+  });
+});
+
+describe("Firestore dream serialization", () => {
+  it("omits optional undefined fields before a private cloud write", () => {
+    const serialized = toFirestoreDream(dream({ neuroFileUrl: undefined, visibility: undefined }));
+
+    expect(serialized).not.toHaveProperty("neuroFileUrl");
+    expect(serialized).not.toHaveProperty("visibility");
+    expect(Object.values(serialized)).not.toContain(undefined);
+  });
+
+  it("preserves intentional private metadata when present", () => {
+    const serialized = toFirestoreDream(dream({
+      visibility: "private",
+      neuroFileUrl: "https://example.test/studies/eeg-42",
+    }));
+
+    expect(serialized).toMatchObject({
+      visibility: "private",
+      neuroFileUrl: "https://example.test/studies/eeg-42",
+    });
   });
 });

@@ -6,6 +6,25 @@ import { getFirebaseDb } from "@/lib/firebase";
 type FirestoreSdk = typeof import("firebase/firestore");
 type FirestoreClient = { sdk: FirestoreSdk; db: Awaited<ReturnType<typeof getFirebaseDb>> };
 
+/**
+ * Firestore rejects `undefined`, while optional fields are useful in the local
+ * domain model. Keep that boundary explicit instead of relaxing the SDK for
+ * every write: only validated Dream fields cross into the private collection.
+ */
+export function toFirestoreDream(dream: Dream) {
+  return {
+    id: dream.id,
+    date: dream.date,
+    title: dream.title,
+    body: dream.body,
+    hue: dream.hue,
+    createdAt: dream.createdAt,
+    updatedAt: dream.updatedAt,
+    ...(dream.visibility === undefined ? {} : { visibility: dream.visibility }),
+    ...(dream.neuroFileUrl === undefined ? {} : { neuroFileUrl: dream.neuroFileUrl }),
+  };
+}
+
 async function getFirestoreClient(): Promise<FirestoreClient> {
   const [sdk, db] = await Promise.all([import("firebase/firestore"), getFirebaseDb()]);
   return { sdk, db };
@@ -81,7 +100,10 @@ export async function synchronizeDreams(userId: string, localDreams: Dream[]) {
   await sdk.setDoc(sdk.doc(db, "users", userId), { schemaVersion: 1, updatedAt: new Date().toISOString() }, { merge: true });
   for (let index = 0; index < merged.dreams.length; index += 450) {
     const batch = sdk.writeBatch(db);
-    merged.dreams.slice(index, index + 450).forEach((dream) => batch.set(sdk.doc(db, "users", userId, "dreams", dream.id), dream));
+    merged.dreams.slice(index, index + 450).forEach((dream) => batch.set(
+      sdk.doc(db, "users", userId, "dreams", dream.id),
+      toFirestoreDream(dream),
+    ));
     await batch.commit();
   }
   return merged;
@@ -89,7 +111,7 @@ export async function synchronizeDreams(userId: string, localDreams: Dream[]) {
 
 export async function saveDreamToCloud(userId: string, dream: Dream) {
   const { db, sdk } = await getFirestoreClient();
-  return sdk.setDoc(sdk.doc(db, "users", userId, "dreams", dream.id), dream);
+  return sdk.setDoc(sdk.doc(db, "users", userId, "dreams", dream.id), toFirestoreDream(dream));
 }
 
 export async function deleteDreamFromCloud(userId: string, dreamId: string) {
