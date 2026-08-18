@@ -33,13 +33,13 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const bodyRef = React.useRef<HTMLTextAreaElement>(null);
   const titleRef = React.useRef<HTMLInputElement>(null);
-  const initialDraftRef = React.useRef(savedDraft);
-  const [date, setDate] = React.useState(initialDate);
-  const [title, setTitle] = React.useState("");
-  const [body, setBody] = React.useState("");
-  const [neuroFileUrl, setNeuroFileUrl] = React.useState("");
-  const [showNeuroLink, setShowNeuroLink] = React.useState(false);
-  const [visibility, setVisibility] = React.useState<DreamVisibility>("private");
+  const initialSource = isEdit && dream ? dream : savedDraft;
+  const [date, setDate] = React.useState(initialSource?.date ?? initialDate);
+  const [title, setTitle] = React.useState(initialSource?.title ?? "");
+  const [body, setBody] = React.useState(initialSource?.body ?? "");
+  const [neuroFileUrl, setNeuroFileUrl] = React.useState(initialSource?.neuroFileUrl ?? "");
+  const [showNeuroLink, setShowNeuroLink] = React.useState(Boolean(initialSource?.neuroFileUrl));
+  const [visibility, setVisibility] = React.useState<DreamVisibility>(isEdit && dream?.visibility === "public" ? "public" : "private");
   const [pseudonym, setPseudonym] = React.useState(cloud.publicName ?? "");
   const [error, setError] = React.useState("");
   const [saving, setSaving] = React.useState(false);
@@ -49,18 +49,8 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
   const revealDetails = isEdit || hasNarrative;
 
   React.useEffect(() => {
-    const source = isEdit && dream ? dream : initialDraftRef.current;
-    setDate(source?.date ?? initialDate);
-    setTitle(source?.title ?? "");
-    setBody(source?.body ?? "");
-    setNeuroFileUrl(source?.neuroFileUrl ?? "");
-    setShowNeuroLink(Boolean(source?.neuroFileUrl));
-    setVisibility(isEdit && dream?.visibility === "public" ? "public" : "private");
-    setPseudonym(cloud.publicName ?? "");
-    setError("");
-    setIsDirty(false);
-    window.setTimeout(() => bodyRef.current?.focus(), 40);
-  }, [cloud.publicName, dream, initialDate, isEdit]);
+    bodyRef.current?.focus({ preventScroll: true });
+  }, []);
 
   React.useEffect(() => {
     if (isEdit || !isDirty) return;
@@ -200,7 +190,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <label htmlFor="dream-body" className="block">
             <span className="mb-2 block text-sm font-medium text-text-secondary">Descripción</span>
-            <Textarea id="dream-body" name="body" ref={bodyRef} autoFocus value={body} onChange={(event) => updateField(setBody, event.target.value)} placeholder="Escribe lo que recuerdes." className="min-h-48" aria-invalid={Boolean(error && body.trim().length < 8)} />
+            <Textarea id="dream-body" name="body" ref={bodyRef} value={body} onChange={(event) => updateField(setBody, event.target.value)} placeholder="Escribe lo que recuerdes." className="min-h-48" aria-invalid={Boolean(error && body.trim().length < 8)} />
           </label>
           <AnimatePresence initial={false}>
             {revealDetails ? (
