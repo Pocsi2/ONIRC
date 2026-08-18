@@ -3,7 +3,6 @@
 import * as React from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { useRouter } from "next/navigation";
 import { CloudCurtain } from "@/components/cloud-curtain";
 import { CloudSyncControl } from "@/components/cloud-sync-control";
 import { DreamCollection } from "@/components/dream-collection";
@@ -100,7 +99,6 @@ function useCalendarQuery() {
 }
 
 export function DreamCalendar({ initialMonthKey }: { initialMonthKey: string }) {
-  const router = useRouter();
   const [searchParams, setCalendarQuery] = useCalendarQuery();
   const reducedMotion = useReducedMotion();
   const { dreams, isReady, persistence, removeDream, restoreDream, resetDreams, cloud, publishDream, makeDreamPrivate } = useDreamStore();
@@ -145,11 +143,11 @@ export function DreamCalendar({ initialMonthKey }: { initialMonthKey: string }) 
       else params.set(key, value);
     });
     const query = params.toString();
-    const href = query ? `/calendar?${query}` : "/calendar";
+    const href = query ? `${window.location.pathname}?${query}` : window.location.pathname;
     setCalendarQuery(query);
-    if (mode === "replace") router.replace(href, { scroll: false });
-    else router.push(href, { scroll: false });
-  }, [router, searchParams, setCalendarQuery]);
+    if (mode === "replace") window.history.replaceState(window.history.state, "", href);
+    else window.history.pushState(window.history.state, "", href);
+  }, [searchParams, setCalendarQuery]);
 
   React.useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
