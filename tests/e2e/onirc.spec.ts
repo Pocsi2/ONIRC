@@ -12,8 +12,12 @@ async function startWithEmptyCalendar(page: import("@playwright/test").Page) {
 
 async function recordDream(page: import("@playwright/test").Page, title: string, body: string) {
   await page.getByRole("button", { name: "Registrar sueño" }).click();
-  await page.locator("#dream-body").fill(body);
-  await page.locator("#dream-title").fill(title);
+  const bodyField = page.locator("#dream-body");
+  const titleField = page.locator("#dream-title");
+  await bodyField.fill(body);
+  await titleField.fill(title);
+  await expect(bodyField).toHaveValue(body);
+  await expect(titleField).toHaveValue(title);
   await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 }
@@ -25,7 +29,9 @@ test("permite conservar, abrir, editar y deshacer la eliminación de un sueño l
   await page.getByRole("button", { name: /Abrir sueño: El jardín blanco/ }).click();
   await expect(page.getByRole("heading", { name: "El jardín blanco" })).toBeVisible();
   await page.getByRole("button", { name: "Editar" }).click();
-  await page.locator("#dream-title").fill("El jardín de porcelana");
+  const editedTitle = page.locator("#dream-title");
+  await editedTitle.fill("El jardín de porcelana");
+  await expect(editedTitle).toHaveValue("El jardín de porcelana");
   await page.getByRole("button", { name: "Actualizar" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: /Abrir sueño: El jardín de porcelana/ }).click();

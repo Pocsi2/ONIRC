@@ -105,8 +105,12 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const submitted = new FormData(event.currentTarget);
-    const cleanTitle = title.trim();
-    const cleanBody = body.trim();
+    const submittedTitle = submitted.get("title");
+    const submittedBody = submitted.get("body");
+    const submittedDate = submitted.get("date");
+    const cleanTitle = (typeof submittedTitle === "string" ? submittedTitle : title).trim();
+    const cleanBody = (typeof submittedBody === "string" ? submittedBody : body).trim();
+    const cleanDate = typeof submittedDate === "string" ? submittedDate : date;
     if (cleanBody.length < 8) {
       setError("Escribe al menos 8 caracteres.");
       bodyRef.current?.focus();
@@ -117,7 +121,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
       titleRef.current?.focus();
       return;
     }
-    if (!date || date > todayIso()) {
+    if (!cleanDate || cleanDate > todayIso()) {
       setError("No se permiten fechas futuras.");
       return;
     }
@@ -143,7 +147,7 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
         return;
       }
     }
-    const draft: DreamDraft = { date, title: cleanTitle, body: cleanBody, neuroFileUrl: normalizedNeuroUrl };
+    const draft: DreamDraft = { date: cleanDate, title: cleanTitle, body: cleanBody, neuroFileUrl: normalizedNeuroUrl };
     setSaving(true);
     const saved = isEdit && dream ? updateDream(dream.id, draft) : addDream(draft);
     if (!saved) {
@@ -196,18 +200,18 @@ export function DreamComposer({ mode, dream, initialDate, onClose, onSaved }: Co
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <label htmlFor="dream-body" className="block">
             <span className="mb-2 block text-sm font-medium text-text-secondary">Descripción</span>
-            <Textarea id="dream-body" ref={bodyRef} autoFocus value={body} onChange={(event) => updateField(setBody, event.target.value)} placeholder="Escribe lo que recuerdes." className="min-h-48" aria-invalid={Boolean(error && body.trim().length < 8)} />
+            <Textarea id="dream-body" name="body" ref={bodyRef} autoFocus value={body} onChange={(event) => updateField(setBody, event.target.value)} placeholder="Escribe lo que recuerdes." className="min-h-48" aria-invalid={Boolean(error && body.trim().length < 8)} />
           </label>
           <AnimatePresence initial={false}>
             {revealDetails ? (
               <motion.div initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={reducedMotion ? reducedTransition : transitions.standard} className="grid gap-5 sm:grid-cols-[.78fr_1.22fr]">
                 <label htmlFor="dream-date" className="block">
                   <span className="mb-2 block text-sm font-medium text-text-secondary">Fecha</span>
-                  <Input id="dream-date" type="date" value={date} max={todayIso()} onChange={(event) => updateField(setDate, event.target.value)} aria-invalid={Boolean(error && date > todayIso())} />
+                  <Input id="dream-date" name="date" type="date" value={date} max={todayIso()} onChange={(event) => updateField(setDate, event.target.value)} aria-invalid={Boolean(error && date > todayIso())} />
                 </label>
                 <label htmlFor="dream-title" className="block">
                   <span className="mb-2 block text-sm font-medium text-text-secondary">Título</span>
-                  <Input id="dream-title" ref={titleRef} value={title} onChange={(event) => updateField(setTitle, event.target.value)} placeholder="Añade un título" maxLength={120} aria-invalid={Boolean(error && title.trim().length < 2)} />
+                  <Input id="dream-title" name="title" ref={titleRef} value={title} onChange={(event) => updateField(setTitle, event.target.value)} placeholder="Añade un título" maxLength={120} aria-invalid={Boolean(error && title.trim().length < 2)} />
                 </label>
               </motion.div>
             ) : null}
